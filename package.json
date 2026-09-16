@@ -1,0 +1,130 @@
+{
+  "name": "@powerduck/schema-designer",
+  "version": "0.1.0",
+  "description": "Composable JSON Schema and OpenAPI parameter editors for React.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    },
+    "./react/tree": {
+      "types": "./dist/react/schemaTreeEditor/index.d.ts",
+      "import": "./dist/react/schemaTreeEditor/index.js",
+      "require": "./dist/react/schemaTreeEditor/index.cjs"
+    },
+    "./react/inline": {
+      "types": "./dist/react/inlineSchemaEditor/index.d.ts",
+      "import": "./dist/react/inlineSchemaEditor/index.js",
+      "require": "./dist/react/inlineSchemaEditor/index.cjs"
+    },
+    "./react/parameters": {
+      "types": "./dist/react/parametersTable/index.d.ts",
+      "import": "./dist/react/parametersTable/index.js",
+      "require": "./dist/react/parametersTable/index.cjs"
+    },
+    "./adapters/generator": {
+      "types": "./dist/react/parametersTable/libs/generateValue.d.ts",
+      "import": "./dist/react/parametersTable/libs/generateValue.js",
+      "require": "./dist/react/parametersTable/libs/generateValue.cjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json",
+    "./compat/inline": {
+      "types": "./dist/compat/inline.d.ts",
+      "import": "./dist/compat/inline.js",
+      "require": "./dist/compat/inline.cjs"
+    },
+    "./compat/tree": {
+      "types": "./dist/compat/tree.d.ts",
+      "import": "./dist/compat/tree.js",
+      "require": "./dist/compat/tree.cjs"
+    },
+    "./compat/parameters": {
+      "types": "./dist/compat/parameters.d.ts",
+      "import": "./dist/compat/parameters.js",
+      "require": "./dist/compat/parameters.cjs"
+    },
+    "./react/variable-editor": {
+      "types": "./dist/react/variableTextEditor/index.d.ts",
+      "import": "./dist/react/variableTextEditor/index.js",
+      "require": "./dist/react/variableTextEditor/index.cjs"
+    },
+    "./compat/variable-editor": {
+      "types": "./dist/compat/variable-editor.d.ts",
+      "import": "./dist/compat/variable-editor.js",
+      "require": "./dist/compat/variable-editor.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "tsup && node scripts/styles.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --pool=forks --maxWorkers=1 --minWorkers=1",
+    "benchmark": "node --import tsx scripts/benchmark.ts",
+    "dev": "vite examples --host 127.0.0.1 --port 4176",
+    "verify:package": "node scripts/verify-package.mjs"
+  },
+  "peerDependencies": {
+    "@chakra-ui/react": "^3.37.0",
+    "@emotion/react": "^11.14.0",
+    "react": ">=18.2.0 <20",
+    "react-dom": ">=18.2.0 <20"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.0",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.9",
+    "@hello-pangea/dnd": "^18.0.1",
+    "nanoid": "^5.1.16",
+    "react-icons": "^5.7.0"
+  },
+  "optionalDependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "json-schema-faker": "^0.6.3"
+  },
+  "devDependencies": {
+    "@chakra-ui/react": "^3.37.0",
+    "@emotion/react": "^11.14.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^24.1.0",
+    "prettier": "^3.9.7",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^1.6.0"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

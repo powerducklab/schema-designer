@@ -1,0 +1,368 @@
+.root {
+  --editor-min-height: 40px;
+  --editor-max-focused-height: 240px;
+  --editor-line-height: 24px;
+  --editor-padding-block: 4px;
+
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+
+  min-height: var(--editor-min-height);
+  height: var(--editor-min-height);
+
+  overflow: hidden;
+  color: var(--color-text-primary, #202124);
+  background: transparent;
+
+  font-family:
+    var(--font-family-ui, Inter), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
+  font-size: var(--font-size-sm, 13px);
+  line-height: var(--editor-line-height);
+}
+
+.root[data-focused] {
+  height: var(--editor-focused-height, var(--editor-min-height));
+  max-height: var(--editor-max-focused-height);
+}
+
+.root[data-wrapped] {
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-surface, #fff);
+  margin-left: 0;
+  margin-top: 0;
+  z-index: 1;
+  width: 100%;
+}
+
+.root[data-disabled] {
+  color: var(--color-text-disabled, #9aa0a6);
+}
+
+/* Keep CodeMirror's outer sizing deterministic. */
+.root :global(.cm-editor),
+.root :global(.cm-scroller) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+}
+
+.root :global(.cm-editor) {
+  font: inherit;
+}
+
+.root :global(.cm-scroller) {
+  padding-inline: var(--space-2, 8px);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* IMPORTANT: never make the measured content inherit the host height.
+ * Doing so creates a self-referential scrollHeight -> host height loop. */
+.root :global(.cm-content) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: var(--editor-line-height);
+}
+
+.root :global(.cm-line) {
+  font-family: var(--font-family-ui, Inter), sans-serif;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 0;
+  min-height: var(--editor-min-height);
+  padding: 0;
+  font-size: var(--font-size-sm, 13px);
+  line-height: var(--editor-min-height);
+}
+
+.root[data-focused] :global(.cm-scroller) {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.root[data-focused] :global(.cm-content) {
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  padding-block: var(--editor-padding-block, 4px);
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  line-height: var(--editor-line-height);
+}
+
+.root[data-focused] :global(.cm-lineWrapping) {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+}
+
+.root[data-focused] :global(.cm-line) {
+  width: auto;
+  min-width: 0;
+  min-height: var(--editor-line-height);
+  line-height: var(--editor-line-height);
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  hyphens: manual;
+}
+
+/* Keep CodeMirror's selection layer behind the text. */
+.root :global(.cm-selectionLayer) {
+  pointer-events: none;
+}
+
+/* Override both focused and inactive CodeMirror base-theme rules. */
+.root :global(.cm-selectionBackground) {
+  background: var(
+    --pd-editor-selection-background,
+    color-mix(in srgb, var(--color-info, #4f79bf) 24%, transparent)
+  ) !important;
+}
+
+.root :global(.cm-focused .cm-selectionBackground) {
+  background: var(
+    --pd-editor-selection-background-focused,
+    color-mix(in srgb, var(--color-info, #4f79bf) 34%, transparent)
+  ) !important;
+}
+
+.root :global(.cm-cursorLayer) {
+  z-index: 30;
+  pointer-events: none;
+}
+
+.root :global(.cm-cursor) {
+  border-left: 1px solid currentColor;
+  display: none;
+  visibility: visible;
+  box-sizing: border-box;
+  margin-left: 0;
+  filter: drop-shadow(1px 0 0 var(--color-surface, #fff))
+    drop-shadow(-1px 0 0 var(--color-surface, #fff));
+  pointer-events: none;
+}
+
+.root :global(.cm-focused .cm-cursor) {
+  display: block;
+}
+
+.root :global(.cm-fat-cursor) {
+  background: currentColor;
+  color: var(--color-surface, #fff);
+}
+
+/* autocomplete */
+.root :global(.cm-tooltip-autocomplete) {
+  z-index: 1500;
+  min-width: 220px;
+  max-width: min(360px, calc(100vw - 24px));
+  margin-top: 8px;
+  overflow: hidden;
+  color: var(--color-text-primary, #202124);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border-default, #dadce0);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgb(60 64 67 / 18%));
+}
+
+.root :global(.cm-tooltip-autocomplete > ul) {
+  max-height: 280px;
+  padding: 4px;
+  overflow-y: auto;
+  font-family: var(--font-family-ui, Inter), sans-serif;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.root :global(.cm-tooltip-autocomplete > ul > li) {
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.root :global(.cm-tooltip-autocomplete > ul > li[aria-selected="true"]) {
+  color: var(--color-text-primary, #202124);
+  background: var(--color-surface-hover, #f1f3f4);
+}
+
+/* Base variable token style */
+.variableToken {
+  --token-color: unset;
+  --token-bg-color: unset;
+  color: var(--token-color);
+  background-color: var(--token-bg-color);
+  position: relative;
+  z-index: 1;
+  display: inline;
+  padding: 2px 0;
+  /* padding: 2px 3px; */
+  /* margin: 0 2px; */
+  border-radius: var(--radius-sm, 4px);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  cursor: text;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.variableToken_unknown {
+  color: var(--color-accent, #dc2626);
+}
+
+.variableToken_environment {
+  color: var(--color-success, #15803d);
+}
+
+.variableToken_secret {
+  color: var(--color-secret, #7c3aed);
+}
+
+.variableToken_request {
+  color: var(--color-info, #2563eb);
+}
+
+.variableToken_dynamic {
+  color: var(--color-dynamic, #1d4ed8);
+}
+
+/* Hover popover */
+.hoverPopover {
+  position: fixed;
+  z-index: 1600;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 24px));
+  padding: 14px;
+  color: var(--color-text-primary, #202124);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border-default, #dadce0);
+  border-radius: var(--radius-lg, 10px);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgb(60 64 67 / 20%));
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+.hoverPopover[data-placement="bottom"]::before,
+.hoverPopover[data-placement="top"]::before {
+  position: absolute;
+  right: -8px;
+  left: -8px;
+  height: 12px;
+  content: "";
+  pointer-events: auto;
+}
+
+.hoverPopover[data-placement="bottom"]::before {
+  top: -16px;
+}
+
+.hoverPopover[data-placement="top"]::before {
+  bottom: -16px;
+}
+
+.hoverPopoverArrow {
+  position: absolute;
+  left: var(--popover-arrow-left, 50%);
+  width: 11px;
+  height: 11px;
+  background: var(--color-surface, #fff);
+  pointer-events: none;
+}
+
+.hoverPopover[data-placement="bottom"] .hoverPopoverArrow {
+  top: -6px;
+  border-top: 1px solid var(--color-border-default, #dadce0);
+  border-left: 1px solid var(--color-border-default, #dadce0);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.hoverPopover[data-placement="top"] .hoverPopoverArrow {
+  bottom: -6px;
+  border-right: 1px solid var(--color-border-default, #dadce0);
+  border-bottom: 1px solid var(--color-border-default, #dadce0);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.popoverHeader {
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+.popoverType {
+  color: var(--color-text-tertiary, #80868b);
+  font-size: var(--font-size-xs, 12px);
+  text-transform: capitalize;
+}
+
+.popoverValue {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 180px;
+  margin-top: 5px;
+  padding: 7px 9px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary, #202124);
+  background: var(--color-surface-subtle, #f8f9fa);
+  border-radius: var(--radius-sm, 6px);
+  /* font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; */
+  font-family: var(--font-family-ui, Inter), sans-serif;
+  white-space: pre-wrap;
+}
+
+.popoverDesc {
+  color: var(--color-text-secondary, #5f6368);
+  font-size: var(--font-size-sm, 13px);
+  overflow-wrap: anywhere;
+}
+
+/* Focus decoration stays inside the editor and never changes its geometry. */
+.root[data-focused] {
+  border-radius: 0;
+  background: var(--color-surface, #fff);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong, #ccd2d8);
+}
+.root :global(.cm-focused) {
+  outline: none;
+}
+
+.root[data-focused] :global(.cm-scroller) {
+  overflow-y: auto;
+}
+.root[data-focused]:hover :global(.cm-scroller),
+.root[data-focused]:focus-within :global(.cm-scroller) {
+  scrollbar-color: var(--color-border-strong, #ccd2d8) transparent;
+}
+.hoverPopover {
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+.root[data-focused][data-multiline] :global(.cm-line) {
+  position: relative;
+}
+
+/* Blank lines remain visible without inserting characters into the value. */
+.root[data-focused][data-multiline] :global(.cm-line:has(> br:only-child))::before {
+  content: "\21b5";
+  position: absolute;
+  color: var(--color-text-tertiary, #989da5);
+  pointer-events: none;
+  user-select: none;
+}

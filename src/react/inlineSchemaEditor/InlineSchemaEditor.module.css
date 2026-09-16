@@ -1,0 +1,213 @@
+.root {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  color: var(--color-text-primary, #26282b);
+  font-family: var(--font-family-ui, system-ui, sans-serif);
+  font-size: 12px;
+}
+.shell {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.editorPane {
+  flex: 1;
+  min-width: 0;
+}
+.previewPane {
+  width: min(36vw, 360px);
+  min-width: 240px;
+  padding: 12px;
+  border: 1px solid var(--color-border-subtle, #eceff1);
+  border-radius: 6px;
+  background: var(--color-surface, #fff);
+  max-height: 70vh;
+  display: flex;
+}
+.root :global(input:not([type="checkbox"]):not([type="radio"])),
+.root :global(select),
+.root :global([data-scope="select"][data-part="trigger"]) {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  border: 1px solid var(--color-border-default, #e0e4e8);
+  border-radius: 4px;
+  color: var(--color-text-primary, #26282b);
+  background: var(--color-surface, #fff);
+}
+.root :global(select) {
+  padding-right: 28px;
+}
+.root :global(textarea) {
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border-default, #e0e4e8);
+  border-radius: 4px;
+  color: var(--color-text-primary, #26282b);
+  background: var(--color-surface, #fff);
+}
+.root :global([data-scope="field"][data-part="root"]) {
+  gap: 4px;
+  min-width: 0;
+}
+.root :global([data-part="label"]) {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--color-text-secondary, #6f747c);
+}
+.root :global([data-part="helper-text"]),
+.root :global(p) {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--color-text-secondary, #6f747c);
+}
+.root :global(button) {
+  font-size: 12px;
+  min-height: 24px;
+  color: var(--color-text-secondary, #6f747c);
+}
+.root :global(button:hover) {
+  background: var(--color-surface-hover, #f4f5f6);
+}
+.root :global(input:focus-visible),
+.root :global(select:focus-visible),
+.root :global(textarea:focus-visible),
+.root :global(button:focus-visible),
+.reference > summary:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #f5c98f);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.root :global([data-scope="switch"][data-part="control"]) {
+  width: 28px;
+  height: 16px;
+  min-width: 28px;
+  background: var(--color-surface-selected, #eef0f2);
+  border: 1px solid var(--color-border-strong, #ccd2d8);
+}
+.root :global([data-scope="switch"][data-part="thumb"]) {
+  width: 12px;
+  height: 12px;
+  background: var(--color-surface, #fff);
+}
+.root
+  :global([data-scope="switch"][data-part="control"][data-state="checked"]) {
+  background: var(--color-accent, #f28c28);
+  border-color: var(--color-accent, #f28c28);
+}
+.tabsList,
+.root :global([data-scope="tabs"][data-part="list"]) {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-subtle, #eceff1);
+  background: transparent;
+  border-radius: 0;
+}
+.root :global([data-scope="tabs"][data-part="trigger"]) {
+  flex: 0 0 auto;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 2px;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  box-shadow: none;
+  font-size: 12px;
+  background: transparent;
+}
+.root :global([data-scope="tabs"][data-part="trigger"][data-selected]) {
+  color: var(--color-text-primary, #26282b);
+  border-bottom-color: var(--color-accent, #f28c28);
+}
+.root :global(.pdDesignerSchemaSection) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.root :global(.pdDesignerSchemaNestedCard) {
+  padding: 8px;
+  border: 1px solid var(--color-border-subtle, #eceff1);
+  border-radius: 4px;
+  background: transparent;
+}
+.reference {
+  border-top: 1px solid var(--color-border-subtle, #eceff1);
+  padding-top: 6px;
+}
+.reference > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-secondary, #6f747c);
+  padding: 2px 0;
+}
+.reference[open] > summary {
+  margin-bottom: 6px;
+}
+:global(.pdDesignerSchemaPopoverContent) {
+  width: min(420px, calc(100vw - 24px));
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, #26282b);
+  border: 1px solid var(--color-border-default, #e0e4e8);
+  border-radius: 6px;
+  max-height: 80vh;
+  overflow: hidden;
+}
+:global(.pdDesignerSchemaPopoverBody) {
+  padding: 12px;
+  max-height: 72vh;
+  overflow: auto;
+}
+:global(.pdDesignerSchemaIconButton) {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+}
+@media (max-width: 900px) {
+  .shell {
+    flex-direction: column;
+  }
+  .editorPane {
+    width: 100%;
+  }
+  .previewPane {
+    width: 100%;
+    min-width: 0;
+    max-height: 280px;
+  }
+}
+
+:global(.pdDesignerSelectMenu) {
+  min-width: var(--reference-width, 132px);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-primary, #26282b);
+  border: 1px solid var(--color-border-default, #e0e4e8);
+  font-size: 12px;
+  padding: 4px;
+}
+:global(.pdDesignerSelectMenu [data-part="item"]) {
+  min-height: 26px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+:global(.pdDesignerSelectMenu [data-highlighted]) {
+  background: var(--color-surface-hover, #f4f5f6);
+}
+
+.root :global(p) {
+  margin: 0;
+}
+.root :global([data-scope="tabs"][data-part="trigger"])::before,
+.root :global([data-scope="tabs"][data-part="trigger"])::after {
+  display: none;
+}
+.root :global([data-scope="tabs"][data-part="indicator"]) {
+  display: none;
+}
