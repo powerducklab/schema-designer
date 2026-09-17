@@ -12,7 +12,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { Box } from "@chakra-ui/react";
 
 import {
   acceptCompletion,
@@ -397,7 +396,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
     );
 
     const safeMinHeight = Number.isFinite(minHeight)
-      ? Math.max(32, Math.round(minHeight))
+      ? Math.max(24, Math.round(minHeight))
       : 32;
 
     const safeMaxHeight = Number.isFinite(maxFocusedHeight)
@@ -2308,7 +2307,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
     }, [popoverPosition]);
 
     const popoverNode = hover ? (
-      <Box
+      <div
         ref={tooltipRef}
         className={styles.hoverPopover}
         style={popoverStyle}
@@ -2317,28 +2316,28 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         onPointerLeave={handleTooltipPointerLeave}
         onPointerDown={markPopoverPointerDown}
       >
-        <Box className={styles.hoverPopoverArrow} />
+        <div className={styles.hoverPopoverArrow} />
 
-        <Box className={styles.popoverHeader}>
+        <div className={styles.popoverHeader}>
           {hover.variable?.name ?? hover.name}
-        </Box>
+        </div>
 
-        <Box className={styles.popoverType}>
+        <div className={styles.popoverType}>
           {hover.variable?.type ?? "Undefined variable"}
-        </Box>
+        </div>
 
         {hover.variable?.value !== undefined ? (
           <div className={styles.popoverValue}>{hover.variable.value}</div>
         ) : null}
 
         {hover.variable?.description ? (
-          <Box className={styles.popoverDesc}>{hover.variable.description}</Box>
+          <div className={styles.popoverDesc}>{hover.variable.description}</div>
         ) : !hover.variable ? (
-          <Box className={styles.popoverDesc}>
+          <div className={styles.popoverDesc}>
             This variable is not defined in the current environment.
-          </Box>
+          </div>
         ) : null}
-      </Box>
+      </div>
     ) : null;
 
     return (
@@ -2350,7 +2349,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           height: expansionMode === "overlay" ? safeMinHeight : undefined,
         }}
       >
-        <Box
+        <div
           ref={hostRef}
           className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
           style={{ ...rootStyle, ...overlayStyle }}
@@ -2364,7 +2363,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           onPointerLeave={handleHostPointerLeave}
         >
           {popoverNode}
-        </Box>
+        </div>
       </div>
     );
   },

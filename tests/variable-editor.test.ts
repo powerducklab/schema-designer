@@ -9,6 +9,7 @@ import {
   createVariableCompletionSource,
   findVariableTokens,
   createMinimalChange,
+  getTokenPresentation,
 } from "../src/react/variableTextEditor/libs/variableTextEditor.utils";
 
 describe("variable editor compatibility", () => {
@@ -51,4 +52,15 @@ describe("variable editor compatibility", () => {
       text.slice(0, change.from) + change.insert + text.slice(change.to),
     ).toBe("{{id}}/next/{{id}}");
   });
+});
+
+it("updates scope highlights when a script defines and deletes a variable", () => {
+  const classes = Object.fromEntries(["environment", "globals", "collection", "local", "unknown"].map(type=>["variableToken_"+type,type]));
+  const known = getTokenPresentation({name:"token",value:"new",type:"environment",color:"#438d63"}, classes);
+  const missing = getTokenPresentation(undefined, classes);
+  expect(known.tokenColor).toBe("#438d63");
+  expect(missing.className).toBe("unknown");
+  for (const type of ["environment", "globals", "collection", "local"]) {
+    expect(getTokenPresentation({name:"token",type}, classes).className).toBe(type);
+  }
 });

@@ -161,7 +161,12 @@ export type ParameterTableGeneratorContext = {
 };
 
 export type ParameterTableProps = {
+  /** Keep a draft row ready for entering the next parameter. Drafts are not emitted. */
+  autoAppendLocation?: OpenApiParameter["in"];
   parameters: OpenApiParameter[];
+  /** Permit draft parameter names/deletion in request mode. */
+  editableParameters?: boolean;
+  variables?: readonly import("../../variableTextEditor/libs/variableTextEditor.types").EndpointVariable[];
   mode?: "design" | "request";
   document?: Record<string, unknown>;
   readOnly?: boolean;

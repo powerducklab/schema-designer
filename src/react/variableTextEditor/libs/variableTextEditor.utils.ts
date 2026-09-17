@@ -64,6 +64,9 @@ export function tokenTypeClass(type?: string): string {
   switch (type?.trim().toLowerCase()) {
     case "secret":
     case "environment":
+    case "globals":
+    case "collection":
+    case "local":
     case "request":
     case "dynamic":
       return type.trim().toLowerCase();

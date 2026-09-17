@@ -549,3 +549,47 @@ it("resizes adjacent columns with the keyboard while keeping total width", () =>
     width.mockRestore();
   }
 });
+
+it("renames and deletes editable request parameters without orphaning values", async () => {
+  const { EditorView } = await import("@codemirror/view");
+  const changed = vi.fn();
+  function Host() {
+    const [parameters, setParameters] = useState([{name:"token",in:"header" as const,schema:{type:"string" as const}}]);
+    const [values,setValues] = useState<any>({'["header","token"]':{value:"{{session}}",enabled:true},'["query","other"]':{value:"keep",enabled:true}});
+    return <ParameterTable mode="request" editableParameters parameters={parameters} onChange={setParameters as any} values={values} onValuesChange={next=>{changed(next);setValues(next);}} variables={[{name:"session",value:"fixture",type:"environment"}]}/>;
+  }
+  render(provider(<Host/>));
+  const input=screen.getByRole("textbox",{name:"Name for token"});
+  const editor=EditorView.findFromDOM(input)!;
+  act(()=>editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:"X-Token"}}));
+  await waitFor(()=>expect(changed).toHaveBeenCalledWith({'["header","X-Token"]':{value:"{{session}}",enabled:true},'["query","other"]':{value:"keep",enabled:true}}));
+  fireEvent.click(screen.getByLabelText("Select X-Token"));
+  fireEvent.click(await screen.findByRole("button",{name:"Delete"}));
+  await waitFor(()=>expect(changed).toHaveBeenLastCalledWith({'["query","other"]':{value:"keep",enabled:true}}));
+});
+
+it("removes a variable's resolved color when a script unsets it",async()=>{
+ const {VariableTextEditor}=await import("../src/react/variableTextEditor");
+ const view=render(provider(<VariableTextEditor value="{{token}}" variables={[{name:"token",color:"green",type:"environment"}]}/>));
+ expect((view.container.querySelector('[data-variable-name="token"]') as HTMLElement).style.color).toBe("green");
+ view.rerender(provider(<VariableTextEditor value="{{token}}" variables={[]}/>));
+ expect((view.container.querySelector('[data-variable-name="token"]') as HTMLElement).style.color).toBe("");
+});
+
+it('request tables promote the draft and append a new blank row', async () => {
+  const { EditorView } = await import('@codemirror/view');
+  const changed = vi.fn();
+  function Host() {
+    const [parameters,setParameters] = useState<any[]>([]);
+    return <ParameterTable mode="request" editableParameters autoAppendLocation="query" parameters={parameters} onChange={next=>{changed(next);setParameters(next);}}/>;
+  }
+  render(provider(<Host/>));
+  expect(screen.queryByText('No parameters defined.')).toBeNull();
+  expect(changed).not.toHaveBeenCalled();
+  const input = screen.getByRole('textbox', {name:'Name for'});
+  const editor = EditorView.findFromDOM(input)!;
+  act(()=>editor.dispatch({changes:{from:0,insert:'search'}}));
+  await waitFor(()=>expect(changed).toHaveBeenLastCalledWith([{name:'search',in:'query',schema:{type:'string'}}]));
+  expect(screen.getByRole('textbox',{name:'Name for search'})).toBe(input);
+  expect(screen.getByRole('textbox',{name:'Name for',exact:true})).not.toBe(input);
+});

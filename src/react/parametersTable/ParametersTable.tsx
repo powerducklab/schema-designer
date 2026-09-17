@@ -107,14 +107,20 @@ export const ParameterTable = memo(function ParameterTable(
     className,
   } = props;
 
+  const appendLocation = !props.readOnly ? props.autoAppendLocation : undefined;
+  const ensureDraft = useCallback((items: ParameterRow[]): ParameterRow[] => {
+    if (!appendLocation || items.some(row => !row.parameter.name)) return items;
+    return [...items, ...createRows([{ name: "", in: appendLocation, schema: { type: "string" } }])];
+  }, [appendLocation]);
   const readOnly = props.readOnly === true;
   const requestMode = props.mode === "request";
+  const lockStructure = requestMode && !props.editableParameters;
   const [generationError, setGenerationError] = useState<string | null>(null);
   const generationRef = useRef<AbortController | null>(null);
   const rowsRef = useRef<ParameterRow[]>([]);
   useEffect(() => () => generationRef.current?.abort(), []);
   const [rows, setRows] = useState<ParameterRow[]>(() =>
-    createRows(parameters),
+    ensureDraft(createRows(parameters)),
   );
 
   rowsRef.current = rows;
@@ -204,9 +210,9 @@ export const ParameterTable = memo(function ParameterTable(
       return;
     }
 
-    setRows((previous) => reconcileRows(previous, parameters));
+    setRows((previous) => ensureDraft(reconcileRows(previous, parameters)));
     setSelectedIds(new Set());
-  }, [parameters]);
+  }, [parameters, ensureDraft]);
 
   useEffect(() => {
     onSelectionChange?.([...selectedIds]);
@@ -349,17 +355,36 @@ export const ParameterTable = memo(function ParameterTable(
    */
   const commitRows = useCallback(
     (nextRows: ParameterRow[]) => {
-      if (readOnly || requestMode) return;
+      if (readOnly || lockStructure) return;
+      const previousRows = rowsRef.current;
+      const nextValues = { ...valuesRef.current };
+      let valuesChanged = false;
+      for (const previous of previousRows) {
+        const nextRow = nextRows.find((row) => row.id === previous.id);
+        const oldKey = parameterKey(previous.parameter);
+        const newKey = nextRow && parameterKey(nextRow.parameter);
+        if (oldKey === newKey || !Object.prototype.hasOwnProperty.call(nextValues, oldKey)) continue;
+        const entry = nextValues[oldKey];
+        delete nextValues[oldKey];
+        if (newKey) nextValues[newKey] = entry;
+        valuesChanged = true;
+      }
+      nextRows = ensureDraft(nextRows);
       rowsRef.current = nextRows;
       setRows(nextRows);
 
-      const nextParameters = nextRows.map((row) => row.parameter);
+      const nextParameters = nextRows.filter(row => !appendLocation || row.parameter.name).map((row) => row.parameter);
 
       lastEmittedParametersRef.current = nextParameters;
 
       onChange?.(nextParameters);
+      if (valuesChanged) {
+        valuesRef.current = nextValues;
+        setLocalValues(nextValues);
+        onValuesChangeRef.current?.(nextValues);
+      }
     },
-    [onChange, readOnly, requestMode],
+    [onChange, readOnly, lockStructure, ensureDraft, appendLocation],
   );
 
   /**
@@ -367,7 +392,7 @@ export const ParameterTable = memo(function ParameterTable(
    */
   const commitReorder = useCallback(
     (nextRows: ParameterRow[]) => {
-      if (readOnly || requestMode) return;
+      if (readOnly || lockStructure) return;
       rowsRef.current = nextRows;
       setRows(nextRows);
 
@@ -378,7 +403,7 @@ export const ParameterTable = memo(function ParameterTable(
       onChange?.(nextParameters);
       onRowReorder?.(nextParameters);
     },
-    [onChange, onRowReorder, readOnly, requestMode],
+    [onChange, onRowReorder, readOnly, lockStructure],
   );
 
   const typeOptions = useMemo(
@@ -982,7 +1007,7 @@ export const ParameterTable = memo(function ParameterTable(
                           key={row.id}
                           draggableId={row.id}
                           index={index}
-                          isDragDisabled={readOnly || requestMode}
+                          isDragDisabled={readOnly || lockStructure}
                         >
                           {(dragProvided, snapshot) => (
                             <Table.Row
@@ -1002,7 +1027,7 @@ export const ParameterTable = memo(function ParameterTable(
                                     {...dragProvided.dragHandleProps}
                                     className={styles.dragHandleWrap}
                                     display={
-                                      readOnly || requestMode
+                                      readOnly || lockStructure
                                         ? "none"
                                         : undefined
                                     }
@@ -1045,11 +1070,11 @@ export const ParameterTable = memo(function ParameterTable(
                                           <VariableTextEditor
                                             autoFocus={false}
                                             ariaLabel={`Name for ${parameter.name}`}
-                                            readOnly={readOnly || requestMode}
+                                            readOnly={readOnly || lockStructure}
                                             value={String(parameter.name ?? "")}
                                             onSubmit={() => {}}
                                             placeholder="Name"
-                                            variables={EMPTY_VARIABLES}
+                                            variables={props.variables ?? EMPTY_VARIABLES}
                                             allowLineBreaks={false}
                                             submitOnEnter={true}
                                             expansionMode="overlay"
@@ -1070,7 +1095,7 @@ export const ParameterTable = memo(function ParameterTable(
                                             <ParameterSettings
                                               parameter={parameter}
                                               document={props.document}
-                                              disabled={readOnly || requestMode}
+                                              disabled={readOnly || lockStructure}
                                               onChange={(next) =>
                                                 handleInputChange(
                                                   row.id,
@@ -1152,7 +1177,7 @@ export const ParameterTable = memo(function ParameterTable(
                                             )}
                                             onSubmit={() => {}}
                                             placeholder="Value"
-                                            variables={EMPTY_VARIABLES}
+                                            variables={props.variables ?? EMPTY_VARIABLES}
                                             allowLineBreaks={true}
                                             expansionMode="overlay"
                                             minHeight={28}
@@ -1180,7 +1205,7 @@ export const ParameterTable = memo(function ParameterTable(
                                           </Span>
                                         ) : (
                                           <Select.Root
-                                            disabled={readOnly || requestMode}
+                                            disabled={readOnly || lockStructure}
                                             collection={typeOptions}
                                             size="xs"
                                             value={[type.split(" (")[0]]}
@@ -1318,7 +1343,7 @@ export const ParameterTable = memo(function ParameterTable(
                   variant="ghost"
                   size="xs"
                   className={styles.actionButton}
-                  disabled={readOnly || requestMode}
+                  disabled={readOnly || lockStructure}
                   onClick={handleDeleteSelected}
                 >
                   <AiOutlineDelete className={styles.actionIcon} />
