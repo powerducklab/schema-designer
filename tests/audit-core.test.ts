@@ -73,6 +73,15 @@ describe("audit regression coverage", () => {
     const rows = [{ id: "one", parameter }];
     expect(reconcileRows(rows, [parameter])).toBe(rows);
   });
+  it("keeps the editing row stable when its name changes", () => {
+    const draft = { name: "", in: "header" as const };
+    const rows = [{ id: "row-1", parameter: draft }];
+    const reconciled = reconcileRows(rows, [
+      { name: "a", in: "header" as const },
+    ]);
+    expect(reconciled).toHaveLength(1);
+    expect(reconciled[0].id).toBe("row-1");
+  });
 });
 it("preserves boolean parameter schemas through reference resolution", async () => {
   const { resolveParameterSchema, resolveParameterType } =

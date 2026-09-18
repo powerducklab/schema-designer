@@ -109,7 +109,7 @@ export function reconcileRows(
 
   const used = new Set<string>();
 
-  return parameters.map((parameter) => {
+  return parameters.map((parameter, index) => {
     const name = String(parameter.name ?? "");
     const location = String(
       (parameter as OpenApiParameter & { in?: string }).in ?? "",
@@ -130,6 +130,18 @@ export function reconcileRows(
             : { ...candidate, parameter };
         }
       }
+    }
+
+    // Positional fallback. Editing the name changes the name+in key on every
+    // keystroke, so key matching would mint a fresh row id and remount the
+    // editor (dropping focus and closing the variable menu). When the parent
+    // echoes rows back in order, reuse the row already rendered at this index.
+    const positional = previous[index];
+    if (positional && !used.has(positional.id)) {
+      used.add(positional.id);
+      return positional.parameter === parameter
+        ? positional
+        : { ...positional, parameter };
     }
 
     return {
