@@ -374,9 +374,7 @@
   border-color: var(--color-accent, #f28c28);
   border-radius: var(--radius-md, 6px);
   background: var(--color-surface, #fff);
-  box-shadow:
-    0 0 0 1px var(--color-accent, #f28c28),
-    0 0 0 3px var(--color-focus-ring, rgba(242, 140, 40, 0.28));
+  box-shadow: none;
 }
 
 .root[data-variant="field"][data-disabled],
@@ -384,16 +382,33 @@
   background: var(--color-surface-subtle, #f7f7f7);
 }
 
-/* Keep a single-line field vertically centered with constant vertical padding
-   both before and after focus; this removes the focus "jump". */
-.root[data-variant="field"] :global(.cm-line) {
-  min-height: var(--editor-line-height);
-  line-height: var(--editor-line-height);
+/* Single-line field: the 1px border is part of the fixed height (border-box),
+   so the line fills the inner content area (min-height minus the 2px border).
+   No vertical padding and no vertical scrollbar keeps the glyphs centered and
+   prevents a scrollbar when 28px of content overflowed a 26px content box.
+   Metrics are identical before and after focus, so focusing never jumps. */
+.root[data-variant="field"]:not([data-wrapped]) :global(.cm-content) {
+  padding-block: 0;
 }
 
-.root[data-variant="field"] :global(.cm-content),
-.root[data-variant="field"][data-focused] :global(.cm-content) {
-  padding-block: var(--editor-padding-block);
+.root[data-variant="field"]:not([data-wrapped]) :global(.cm-line) {
+  min-height: calc(var(--editor-min-height) - 2px);
+  line-height: calc(var(--editor-min-height) - 2px);
+}
+
+.root[data-variant="field"]:not([data-wrapped]) :global(.cm-scroller) {
+  overflow-y: hidden;
+}
+
+/* Expanded (wrapped multi-line / overlay) field: restore the 24px line metric,
+   vertical breathing room and scrolling inside the popover. */
+.root[data-variant="field"][data-wrapped] :global(.cm-content) {
+  padding-block: var(--editor-padding-block, 4px);
+}
+
+.root[data-variant="field"][data-wrapped] :global(.cm-line) {
+  min-height: var(--editor-line-height);
+  line-height: var(--editor-line-height);
 }
 
 .root[data-focused] :global(.cm-scroller) {
