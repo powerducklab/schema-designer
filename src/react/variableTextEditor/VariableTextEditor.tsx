@@ -379,6 +379,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       maxFocusedHeight = 320,
       maxLength,
       allowLineBreaks = false,
+      variant = "embedded",
       onChange,
       onSubmit,
       onFocus,
@@ -2353,6 +2354,8 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           ref={hostRef}
           className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
           style={{ ...rootStyle, ...overlayStyle }}
+          data-variant={variant}
+          data-expansion={expansionMode}
           data-focused={focused ? "" : undefined}
           data-wrapped={focused && wrapped ? "" : undefined}
           data-multiline={allowLineBreaks ? "" : undefined}

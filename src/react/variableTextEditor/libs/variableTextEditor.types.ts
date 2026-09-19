@@ -44,6 +44,17 @@ export interface VariableTextEditorProps {
   safePadding?: number;
   maxFocusedHeight?: number;
   maxLength?: number;
+  /**
+   * Visual chrome.
+   * - "embedded" (default): borderless and transparent, meant to live inside
+   *   an outer bordered container such as the request URL bar or a parameter
+   *   table cell. Focus never paints an extra inner border (no layout shift).
+   * - "field": a standalone input that mirrors the baseUi TextInput — its own
+   *   subtle border, rounded corners and accent focus ring — used for bare
+   *   credential fields. The 1px border is always reserved, so focusing never
+   *   changes the geometry.
+   */
+  variant?: "field" | "embedded";
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
   onFocus?: () => void;
