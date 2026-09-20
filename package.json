@@ -80,6 +80,7 @@
   ],
   "scripts": {
     "build": "tsup && node scripts/styles.mjs",
+    "watch": "tsup --watch --onSuccess \"node scripts/styles.mjs\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --pool=forks --maxWorkers=1 --minWorkers=1",
     "benchmark": "node --import tsx scripts/benchmark.ts",
