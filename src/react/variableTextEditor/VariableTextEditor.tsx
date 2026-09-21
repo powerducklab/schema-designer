@@ -361,6 +361,56 @@ function createVariableCompletionExtension(
   });
 }
 
+/**
+ * The four callbacks are mirrored into refs on every render, so callers can
+ * pass fresh inline closures without forcing a re-render (parameter tables
+ * mount hundreds of editors). A re-render is required only when a value or
+ * presentation prop actually changes.
+ */
+function areVariableTextEditorPropsEqual(
+  prev: VariableTextEditorProps,
+  next: VariableTextEditorProps,
+): boolean {
+  const callbackKeys = new Set(["onChange", "onSubmit", "onFocus", "onBlur"]);
+  const keys = new Set([
+    ...Object.keys(prev),
+    ...Object.keys(next),
+  ]) as Set<keyof VariableTextEditorProps>;
+  for (const key of keys) {
+    if (callbackKeys.has(key as string)) continue;
+    if (!Object.is(prev[key], next[key])) return false;
+  }
+  return true;
+}
+
+let sharedOverlayLayer: HTMLDivElement | null = null;
+
+/**
+ * A single body-level fixed layer hosts the focused overlay editor (only one
+ * editor can be focused at a time). Sharing one layer avoids mounting a hidden
+ * container for every table cell.
+ */
+function getOverlayLayer(): HTMLDivElement | null {
+  if (typeof document === "undefined") return null;
+  if (!sharedOverlayLayer) {
+    const layer = document.createElement("div");
+    layer.dataset.pdOverlayLayer = "true";
+    layer.style.display = "none";
+    layer.style.position = "fixed";
+    layer.style.zIndex = "1100";
+    layer.style.background = "var(--color-surface, #ffffff)";
+    layer.style.border =
+      "1px solid var(--color-border-default, #d6d9dd)";
+    layer.style.borderRadius = "var(--radius-md, 8px)";
+    layer.style.boxShadow =
+      "var(--shadow-lg, 0 12px 32px rgb(60 64 67 / 18%))";
+    layer.style.overflow = "hidden";
+    document.body.appendChild(layer);
+    sharedOverlayLayer = layer;
+  }
+  return sharedOverlayLayer;
+}
+
 export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
   (props) => {
     const {
@@ -462,18 +512,29 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
     const wrappedRef = useRef(false);
 
     const anchorRef = useRef<HTMLDivElement>(null);
-    const [overlayStyle, setOverlayStyle] = useState<CSSProperties>();
 
+    // While focused in overlay mode, park the editor host inside the fixed
+    // body layer and keep it aligned with the anchor. Moving a focused node
+    // within the same document preserves focus and CodeMirror state.
     useLayoutEffect(() => {
+      const layer = getOverlayLayer();
+      const host = hostRef.current;
+      const anchor = anchorRef.current;
+      if (!host || !anchor || !layer) return undefined;
+
+      const restore = () => {
+        if (host.parentNode !== anchor) anchor.appendChild(host);
+        layer.style.display = "none";
+      };
+
       if (!focused || expansionMode !== "overlay") {
-        setOverlayStyle(undefined);
-        return;
+        restore();
+        return undefined;
       }
+
       let frame = 0;
       const position = () => {
         frame = 0;
-        const anchor = anchorRef.current;
-        if (!anchor) return;
         const rect = anchor.getBoundingClientRect();
         if (rect.bottom <= 0 || rect.top >= window.innerHeight) {
           viewRef.current?.contentDOM.blur();
@@ -484,17 +545,19 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           8,
           Math.min(rect.top, window.innerHeight - height - 8),
         );
-        setOverlayStyle({
-          position: "fixed",
-          top,
-          left: Math.max(8, rect.left),
-          width: Math.min(
-            rect.width,
-            window.innerWidth - Math.max(8, rect.left) - 8,
-          ),
-          maxHeight: Math.max(safeMinHeight, window.innerHeight - top - 8),
-          zIndex: 1100,
-        });
+        const left = Math.max(8, rect.left);
+        layer.style.display = "block";
+        layer.style.top = `${top}px`;
+        layer.style.left = `${left}px`;
+        layer.style.width = `${Math.min(
+          rect.width,
+          window.innerWidth - left - 8,
+        )}px`;
+        layer.style.maxHeight = `${Math.max(
+          safeMinHeight,
+          window.innerHeight - top - 8,
+        )}px`;
+        if (host.parentNode !== layer) layer.appendChild(host);
       };
       const schedule = () => {
         if (!frame) frame = requestAnimationFrame(position);
@@ -506,12 +569,13 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         typeof ResizeObserver === "undefined"
           ? null
           : new ResizeObserver(schedule);
-      if (anchorRef.current) observer?.observe(anchorRef.current);
+      observer?.observe(anchor);
       return () => {
         cancelAnimationFrame(frame);
         observer?.disconnect();
         window.removeEventListener("scroll", schedule, true);
         window.removeEventListener("resize", schedule);
+        restore();
       };
     }, [focused, expansionMode, focusedHeight, safeMinHeight]);
 
@@ -2353,7 +2417,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         <div
           ref={hostRef}
           className={[styles.root, className ?? ""].filter(Boolean).join(" ")}
-          style={{ ...rootStyle, ...overlayStyle }}
+          style={rootStyle}
           data-variant={variant}
           data-expansion={expansionMode}
           data-focused={focused ? "" : undefined}
@@ -2370,6 +2434,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       </div>
     );
   },
+  areVariableTextEditorPropsEqual,
 );
 
 VariableTextEditor.displayName = "VariableTextEditor";

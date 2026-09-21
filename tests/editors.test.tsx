@@ -593,3 +593,60 @@ it('request tables promote the draft and append a new blank row', async () => {
   expect(screen.getByRole('textbox',{name:'Name for search'})).toBe(input);
   expect(screen.getByRole('textbox',{name:'Name for',exact:true})).not.toBe(input);
 });
+
+it("parks an overlay editor in a body-level fixed layer while focused", async () => {
+  const { VariableTextEditor } = await import(
+    "../src/react/variableTextEditor"
+  );
+  const rect = {
+    top: 120,
+    left: 100,
+    bottom: 148,
+    right: 500,
+    width: 400,
+    height: 28,
+    x: 100,
+    y: 120,
+    toJSON() {},
+  } as unknown as DOMRect;
+  const spy = vi
+    .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    .mockReturnValue(rect);
+  try {
+    render(
+      provider(
+        <VariableTextEditor
+          value=""
+          expansionMode="overlay"
+          minHeight={28}
+          onChange={() => {}}
+        />,
+      ),
+    );
+
+    const input = screen.getByRole("textbox") as HTMLElement;
+    act(() => input.focus());
+
+    await waitFor(() => {
+      const layer = document.querySelector(
+        "[data-pd-overlay-layer]",
+      ) as HTMLElement;
+      expect(layer?.style.display).toBe("block");
+    });
+
+    const layer = document.querySelector(
+      "[data-pd-overlay-layer]",
+    ) as HTMLElement;
+    // The CodeMirror host is moved out of the (possibly transformed) table cell.
+    expect(layer.querySelector(".cm-editor")).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.blur(input);
+    });
+    await waitFor(() => expect(layer.style.display).toBe("none"));
+    // Editor is returned to its anchor after blur.
+    expect(layer.querySelector(".cm-editor")).toBeNull();
+  } finally {
+    spy.mockRestore();
+  }
+});

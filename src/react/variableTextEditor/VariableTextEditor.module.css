@@ -435,3 +435,14 @@
   pointer-events: none;
   user-select: none;
 }
+
+/* When an overlay editor is parked in the body-level fixed layer, size it to
+   the layer (the layer supplies the floating surface and viewport clamp). */
+:global([data-pd-overlay-layer]) > .root {
+  width: 100%;
+  height: auto;
+  min-height: var(--editor-focused-height, var(--editor-min-height));
+  max-height: 100%;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface, #ffffff);
+}

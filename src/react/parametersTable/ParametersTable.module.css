@@ -275,9 +275,9 @@
  * ========================= */
 
 .checkboxCell {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
 
   padding: 0;
 
@@ -287,7 +287,8 @@
 .checkboxCellGroup {
   display: flex;
 
-  width: 48px;
+  gap: 2px;
+  width: 56px;
   height: 32px;
 
   align-items: center;
@@ -295,6 +296,28 @@
 
   padding: 0;
   margin: 0;
+}
+
+/* The row-select checkbox is a bulk-action affordance, while the per-parameter
+   "include" checkbox lives in the Value column and is always visible. To avoid
+   two competing checkboxes per row, hide the row-select control until the row
+   is hovered, keyboard-focused, or already selected. */
+.row .checkboxCell .checkboxRoot {
+  opacity: 0;
+
+  transition: opacity var(--transition-fast, 140ms ease);
+}
+
+.row:hover .checkboxCell .checkboxRoot,
+.row:focus-within .checkboxCell .checkboxRoot,
+.row[data-selected="true"] .checkboxCell .checkboxRoot {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .row .checkboxCell .checkboxRoot {
+    opacity: 1;
+  }
 }
 
 .checkboxRoot {
