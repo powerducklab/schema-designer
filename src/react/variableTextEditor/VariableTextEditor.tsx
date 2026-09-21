@@ -459,6 +459,18 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
     const viewRef = useRef<EditorView | null>(null);
 
     const destroyedRef = useRef(false);
+
+    // True only during the synchronous appendChild that moves the host between
+    // the anchor and the overlay layer; the synthetic focus/blur it fires must
+    // be ignored entirely.
+    const movingDomRef = useRef(false);
+    // True for the short window after entering the overlay while the browser
+    // may still reset focus to <body> at the end of the mousedown transaction.
+    const awaitingRefocusRef = useRef(false);
+    // Bumped on every genuine focus/blur transition. Scheduled focus reclaims
+    // capture the token from their focus session and no-op after a real blur,
+    // so a late callback can never steal focus back once the editor closed.
+    const focusTokenRef = useRef(0);
     const isComposingRef = useRef(false);
 
     const pendingCompositionSyncRef = useRef(false);
@@ -523,7 +535,13 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       if (!host || !anchor || !layer) return undefined;
 
       const restore = () => {
-        if (host.parentNode !== anchor) anchor.appendChild(host);
+        if (host.parentNode !== anchor) {
+          // Swallow the synthetic focus/blur fired by moving the host back;
+          // a real blur has already collapsed the editor.
+          movingDomRef.current = true;
+          anchor.appendChild(host);
+          movingDomRef.current = false;
+        }
         layer.style.display = "none";
       };
 
@@ -533,6 +551,8 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       }
 
       let frame = 0;
+      let restoreRaf = 0;
+      let restoreTimer = 0;
       const position = () => {
         frame = 0;
         const rect = anchor.getBoundingClientRect();
@@ -557,7 +577,60 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           safeMinHeight,
           window.innerHeight - top - 8,
         )}px`;
-        if (host.parentNode !== layer) layer.appendChild(host);
+
+        // Moving the focused host (reparenting into the fixed layer) fires a
+        // synthetic blur and can leave focus on <body> because the move happens
+        // inside the mousedown focus transaction. Guard that blur, then reclaim
+        // focus once the transaction settles. See reparentingRef and the blur
+        // handler. Scheduled restores are cancelled by the effect cleanup when
+        // the editor genuinely blurs, so focus is never stolen back.
+        const moved = host.parentNode !== layer;
+        const activeView = viewRef.current;
+        if (moved) {
+          const wantsFocus = focusedRef.current;
+          // Swallow the synthetic focus/blur dispatched synchronously by the
+          // DOM move itself.
+          movingDomRef.current = true;
+          layer.appendChild(host);
+          movingDomRef.current = false;
+
+          if (activeView && wantsFocus) {
+            const token = focusTokenRef.current;
+            const reclaimFocus = () => {
+              if (
+                destroyedRef.current ||
+                viewRef.current !== activeView ||
+                focusTokenRef.current !== token ||
+                !focusedRef.current ||
+                activeView.hasFocus
+              ) {
+                return;
+              }
+              const doc = activeView.dom.ownerDocument;
+              if (
+                doc.activeElement !== doc.body &&
+                !host.contains(doc.activeElement)
+              ) {
+                return;
+              }
+              activeView.focus();
+            };
+            // Reclaim immediately, then keep a short window open: some
+            // browsers reset focus to <body> at the end of the mousedown
+            // transaction (after the synchronous move). The blur handler only
+            // honors that artifact while this window is open.
+            reclaimFocus();
+            awaitingRefocusRef.current = true;
+            const finish = () => {
+              awaitingRefocusRef.current = false;
+              reclaimFocus();
+            };
+            cancelAnimationFrame(restoreRaf);
+            clearTimeout(restoreTimer);
+            restoreRaf = requestAnimationFrame(finish);
+            restoreTimer = window.setTimeout(finish, 0);
+          }
+        }
       };
       const schedule = () => {
         if (!frame) frame = requestAnimationFrame(position);
@@ -572,6 +645,10 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       observer?.observe(anchor);
       return () => {
         cancelAnimationFrame(frame);
+        cancelAnimationFrame(restoreRaf);
+        clearTimeout(restoreTimer);
+        movingDomRef.current = false;
+        awaitingRefocusRef.current = false;
         observer?.disconnect();
         window.removeEventListener("scroll", schedule, true);
         window.removeEventListener("resize", schedule);
@@ -1826,6 +1903,12 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
                   return false;
                 }
 
+                // Ignore focus synthesized by the synchronous DOM move.
+                if (movingDomRef.current) {
+                  return false;
+                }
+
+                focusTokenRef.current += 1;
                 focusedRef.current = true;
 
                 setFocused(true);
@@ -1858,6 +1941,24 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
                   return false;
                 }
 
+                // Synthetic blur from the synchronous DOM move: never real.
+                if (movingDomRef.current) {
+                  return false;
+                }
+                // Browser artifact: at the end of the mousedown transaction the
+                // reparent can drop focus to <body> with no related target.
+                // Swallow only that case; a blur to another control, or a
+                // synthetic blur that leaves this editor active, is genuine.
+                if (awaitingRefocusRef.current) {
+                  const doc = view.dom.ownerDocument;
+                  const related = (arguments[1] as FocusEvent | undefined)
+                    ?.relatedTarget;
+                  if (related == null && doc.activeElement === doc.body) {
+                    return false;
+                  }
+                }
+
+                focusTokenRef.current += 1;
                 focusedRef.current = false;
 
                 setFocused(false);
