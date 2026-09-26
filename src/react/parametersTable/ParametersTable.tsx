@@ -16,13 +16,13 @@ import {
   useState,
 } from "react";
 import {
-  ActionBar,
   Box,
   Button,
   Checkbox,
   Flex,
   Portal,
   Select,
+  Switch,
   Span,
   Table,
   Text,
@@ -108,10 +108,19 @@ export const ParameterTable = memo(function ParameterTable(
   } = props;
 
   const appendLocation = !props.readOnly ? props.autoAppendLocation : undefined;
-  const ensureDraft = useCallback((items: ParameterRow[]): ParameterRow[] => {
-    if (!appendLocation || items.some(row => !row.parameter.name)) return items;
-    return [...items, ...createRows([{ name: "", in: appendLocation, schema: { type: "string" } }])];
-  }, [appendLocation]);
+  const ensureDraft = useCallback(
+    (items: ParameterRow[]): ParameterRow[] => {
+      if (!appendLocation || items.some((row) => !row.parameter.name))
+        return items;
+      return [
+        ...items,
+        ...createRows([
+          { name: "", in: appendLocation, schema: { type: "string" } },
+        ]),
+      ];
+    },
+    [appendLocation],
+  );
   const readOnly = props.readOnly === true;
   const requestMode = props.mode === "request";
   const lockStructure = requestMode && !props.editableParameters;
@@ -363,7 +372,11 @@ export const ParameterTable = memo(function ParameterTable(
         const nextRow = nextRows.find((row) => row.id === previous.id);
         const oldKey = parameterKey(previous.parameter);
         const newKey = nextRow && parameterKey(nextRow.parameter);
-        if (oldKey === newKey || !Object.prototype.hasOwnProperty.call(nextValues, oldKey)) continue;
+        if (
+          oldKey === newKey ||
+          !Object.prototype.hasOwnProperty.call(nextValues, oldKey)
+        )
+          continue;
         const entry = nextValues[oldKey];
         delete nextValues[oldKey];
         if (newKey) nextValues[newKey] = entry;
@@ -373,7 +386,9 @@ export const ParameterTable = memo(function ParameterTable(
       rowsRef.current = nextRows;
       setRows(nextRows);
 
-      const nextParameters = nextRows.filter(row => !appendLocation || row.parameter.name).map((row) => row.parameter);
+      const nextParameters = nextRows
+        .filter((row) => !appendLocation || row.parameter.name)
+        .map((row) => row.parameter);
 
       lastEmittedParametersRef.current = nextParameters;
 
@@ -856,6 +871,45 @@ export const ParameterTable = memo(function ParameterTable(
           {generationError}
         </Text>
       )}
+      {selectedIds.size > 0 && (
+        <div
+          className={styles.actionBarContent}
+          role="toolbar"
+          aria-label="Selected parameter actions"
+        >
+          <Box className={styles.actionBarLeft}>
+            <Span className={styles.actionBarTrigger}>
+              {selectedIds.size} selected
+            </Span>
+          </Box>
+
+          <Span className={styles.actionBarDivider} />
+
+          <Button
+            variant="ghost"
+            size="xs"
+            className={styles.actionButton}
+            disabled={readOnly || lockStructure}
+            onClick={handleDeleteSelected}
+          >
+            <AiOutlineDelete className={styles.actionIcon} />
+            Delete
+          </Button>
+
+          <Span className={styles.actionBarDivider} />
+
+          <Button
+            variant="ghost"
+            size="xs"
+            className={`${styles.actionButton} ${styles.actionButtonAccent}`}
+            disabled={readOnly}
+            onClick={handleGenerate}
+          >
+            <LuRefreshCw className={styles.actionIcon} />
+            Generate values
+          </Button>
+        </div>
+      )}
       <Box ref={viewportRef} className={styles.tableViewport}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="parameters" direction="vertical">
@@ -1074,7 +1128,9 @@ export const ParameterTable = memo(function ParameterTable(
                                             value={String(parameter.name ?? "")}
                                             onSubmit={() => {}}
                                             placeholder="Name"
-                                            variables={props.variables ?? EMPTY_VARIABLES}
+                                            variables={
+                                              props.variables ?? EMPTY_VARIABLES
+                                            }
                                             allowLineBreaks={false}
                                             submitOnEnter={true}
                                             expansionMode="overlay"
@@ -1095,7 +1151,9 @@ export const ParameterTable = memo(function ParameterTable(
                                             <ParameterSettings
                                               parameter={parameter}
                                               document={props.document}
-                                              disabled={readOnly || lockStructure}
+                                              disabled={
+                                                readOnly || lockStructure
+                                              }
                                               onChange={(next) =>
                                                 handleInputChange(
                                                   row.id,
@@ -1118,8 +1176,8 @@ export const ParameterTable = memo(function ParameterTable(
                                           className={styles.variableTextEditor}
                                         >
                                           {requestMode && (
-                                            <Checkbox.Root
-                                              className={styles.checkboxRoot}
+                                            <Switch.Root
+                                              className={styles.includeSwitch}
                                               size="sm"
                                               disabled={
                                                 readOnly ||
@@ -1131,6 +1189,11 @@ export const ParameterTable = memo(function ParameterTable(
                                                   parameterKey(parameter)
                                                 ]?.enabled ??
                                                   true)
+                                              }
+                                              title={
+                                                parameter.in === "path"
+                                                  ? "Path parameters are required"
+                                                  : "Include in request"
                                               }
                                               aria-label={`Include ${parameter.name}`}
                                               onCheckedChange={(event) => {
@@ -1155,11 +1218,11 @@ export const ParameterTable = memo(function ParameterTable(
                                                 );
                                               }}
                                             >
-                                              <Checkbox.HiddenInput />
-                                              <Checkbox.Control>
-                                                <Checkbox.Indicator />
-                                              </Checkbox.Control>
-                                            </Checkbox.Root>
+                                              <Switch.HiddenInput role="switch" />
+                                              <Switch.Control>
+                                                <Switch.Thumb />
+                                              </Switch.Control>
+                                            </Switch.Root>
                                           )}
                                           <VariableTextEditor
                                             autoFocus={false}
@@ -1177,7 +1240,9 @@ export const ParameterTable = memo(function ParameterTable(
                                             )}
                                             onSubmit={() => {}}
                                             placeholder="Value"
-                                            variables={props.variables ?? EMPTY_VARIABLES}
+                                            variables={
+                                              props.variables ?? EMPTY_VARIABLES
+                                            }
                                             allowLineBreaks={true}
                                             expansionMode="overlay"
                                             minHeight={28}
@@ -1324,48 +1389,6 @@ export const ParameterTable = memo(function ParameterTable(
             )}
           </Droppable>
         </DragDropContext>
-
-        <ActionBar.Root open={selectedIds.size > 0}>
-          <Portal>
-            <ActionBar.Positioner>
-              <ActionBar.Content className={styles.actionBarContent}>
-                <Box className={styles.actionBarLeft}>
-                  <ActionBar.SelectionTrigger
-                    className={styles.actionBarTrigger}
-                  >
-                    {selectedIds.size} selected
-                  </ActionBar.SelectionTrigger>
-                </Box>
-
-                <Span className={styles.actionBarDivider} />
-
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className={styles.actionButton}
-                  disabled={readOnly || lockStructure}
-                  onClick={handleDeleteSelected}
-                >
-                  <AiOutlineDelete className={styles.actionIcon} />
-                  Delete
-                </Button>
-
-                <Span className={styles.actionBarDivider} />
-
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className={`${styles.actionButton} ${styles.actionButtonAccent}`}
-                  disabled={readOnly}
-                  onClick={handleGenerate}
-                >
-                  <LuRefreshCw className={styles.actionIcon} />
-                  Generate values
-                </Button>
-              </ActionBar.Content>
-            </ActionBar.Positioner>
-          </Portal>
-        </ActionBar.Root>
       </Box>
     </Box>
   );

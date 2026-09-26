@@ -150,7 +150,7 @@ describe("interactive editing", () => {
       ),
     );
     fireEvent.click(
-      screen.getByRole("checkbox", { name: "Include id" }).closest("label")!,
+      screen.getByRole("switch", { name: "Include id" }).closest("label")!,
     );
     await waitFor(() =>
       expect(onValuesChange).toHaveBeenCalledWith({
@@ -161,6 +161,10 @@ describe("interactive editing", () => {
       (screen.getByRole("checkbox", { name: "Select id" }) as HTMLInputElement)
         .checked,
     ).toBe(false);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select id" }).closest("label")!);
+    const toolbar = await screen.findByRole("toolbar", { name: "Selected parameter actions" });
+    expect(toolbar.parentElement?.querySelector("table")).toBe(screen.getByRole("table"));
+    expect((screen.getByRole("switch", { name: "Include id" }) as HTMLInputElement).checked).toBe(false);
   });
   it("does not overwrite a controlled value edited during async generation", async () => {
     let finish!: (value: unknown) => void;
@@ -594,7 +598,7 @@ it('request tables promote the draft and append a new blank row', async () => {
   expect(screen.getByRole('textbox',{name:'Name for'})).not.toBe(input);
 });
 
-it("parks an overlay editor in a body-level fixed layer while focused", async () => {
+it("parks a wrapped overlay editor in a body-level fixed layer while focused", async () => {
   const { VariableTextEditor } = await import(
     "../src/react/variableTextEditor"
   );
@@ -626,6 +630,7 @@ it("parks an overlay editor in a body-level fixed layer while focused", async ()
 
     const input = screen.getByRole("textbox") as HTMLElement;
     const host = input.closest("[data-expansion]") as HTMLElement;
+    Object.defineProperty(input, "scrollHeight", { configurable: true, value: 52 });
     host.style.fontWeight = "500";
     host.style.letterSpacing = "0.25px";
     host.style.setProperty("--font-family-ui", "Arial");
@@ -685,6 +690,7 @@ it("does not reparent a focused overlay when typing expands its height", async (
   try {
     render(<VariableTextEditor value="" expansionMode="overlay" minHeight={28} />);
     const input = screen.getByRole("textbox");
+    Object.defineProperty(input, "scrollHeight", { configurable: true, value: 52 });
     act(() => input.focus());
     await waitFor(() => expect(document.activeElement).toBe(input));
     const layer = document.querySelector("[data-pd-overlay-layer]")!;
@@ -701,4 +707,21 @@ it("does not reparent a focused overlay when typing expands its height", async (
   } finally {
     spy.mockRestore();
   }
+});
+
+
+it("keeps a single-line parameter editor in its cell during focus and typing", async () => {
+  const { VariableTextEditor } = await import("../src/react/variableTextEditor");
+  const { EditorView } = await import("@codemirror/view");
+  render(<VariableTextEditor value="value" expansionMode="overlay" minHeight={28} />);
+  const input = screen.getByRole("textbox");
+  const host = input.closest("[data-expansion]")!;
+  const parent = host.parentElement;
+  Object.defineProperty(input, "scrollHeight", { configurable: true, value: 28 });
+  act(() => input.focus());
+  act(() => EditorView.findFromDOM(input)!.dispatch({ changes: { from: 5, insert: " edited" } }));
+  await waitFor(() => expect(input.textContent).toBe("value edited"));
+  expect(host.parentElement).toBe(parent);
+  expect(document.activeElement).toBe(input);
+  expect(host.closest("[data-pd-overlay-layer]")).toBeNull();
 });

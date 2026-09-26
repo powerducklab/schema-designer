@@ -12,7 +12,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-
 import {
   acceptCompletion,
   completionKeymap,
@@ -377,8 +376,7 @@ function getOverlayLayer(): HTMLDivElement | null {
     layer.style.position = "fixed";
     layer.style.zIndex = "1100";
     layer.style.background = "var(--color-surface, #ffffff)";
-    layer.style.border =
-      "1px solid var(--color-border-default, #d6d9dd)";
+    layer.style.border = "1px solid var(--color-border-default, #d6d9dd)";
     layer.style.borderRadius = "var(--radius-md, 8px)";
     layer.style.boxSizing = "content-box";
     layer.style.transform = "translate(-1px, -1px)";
@@ -524,7 +522,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         if (!layer.firstChild) layer.style.display = "none";
       };
 
-      if (!focused || expansionMode !== "overlay") {
+      if (!focused || !wrapped || expansionMode !== "overlay") {
         restore();
         return undefined;
       }
@@ -539,7 +537,10 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           viewRef.current?.contentDOM.blur();
           return;
         }
-        const height = Math.min(focusedHeightRef.current, window.innerHeight - 16);
+        const height = Math.min(
+          focusedHeightRef.current,
+          window.innerHeight - 16,
+        );
         const top = Math.max(
           8,
           Math.min(rect.top, window.innerHeight - height - 8),
@@ -574,16 +575,29 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           }
           for (const property of Array.from(computed)) {
             if (property.startsWith("--")) {
-              layer.style.setProperty(property, computed.getPropertyValue(property));
+              layer.style.setProperty(
+                property,
+                computed.getPropertyValue(property),
+              );
             }
           }
           for (const property of [
-            "font-family", "font-size", "font-weight", "font-style",
-            "font-stretch", "font-kerning", "font-feature-settings",
-            "font-variation-settings", "letter-spacing", "text-transform",
+            "font-family",
+            "font-size",
+            "font-weight",
+            "font-style",
+            "font-stretch",
+            "font-kerning",
+            "font-feature-settings",
+            "font-variation-settings",
+            "letter-spacing",
+            "text-transform",
             "direction",
           ]) {
-            layer.style.setProperty(property, computed.getPropertyValue(property));
+            layer.style.setProperty(
+              property,
+              computed.getPropertyValue(property),
+            );
           }
           const wantsFocus = focusedRef.current;
           // Swallow the synthetic focus/blur dispatched synchronously by the
@@ -653,7 +667,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         window.removeEventListener("resize", schedule);
         restore();
       };
-    }, [focused, expansionMode, safeMinHeight]);
+    }, [focused, wrapped, expansionMode, safeMinHeight]);
 
     const [popoverPosition, setPopoverPosition] =
       useState<PopoverPosition | null>(null);
