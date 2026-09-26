@@ -361,28 +361,6 @@ function createVariableCompletionExtension(
   });
 }
 
-/**
- * The four callbacks are mirrored into refs on every render, so callers can
- * pass fresh inline closures without forcing a re-render (parameter tables
- * mount hundreds of editors). A re-render is required only when a value or
- * presentation prop actually changes.
- */
-function areVariableTextEditorPropsEqual(
-  prev: VariableTextEditorProps,
-  next: VariableTextEditorProps,
-): boolean {
-  const callbackKeys = new Set(["onChange", "onSubmit", "onFocus", "onBlur"]);
-  const keys = new Set([
-    ...Object.keys(prev),
-    ...Object.keys(next),
-  ]) as Set<keyof VariableTextEditorProps>;
-  for (const key of keys) {
-    if (callbackKeys.has(key as string)) continue;
-    if (!Object.is(prev[key], next[key])) return false;
-  }
-  return true;
-}
-
 let sharedOverlayLayer: HTMLDivElement | null = null;
 
 /**
@@ -529,6 +507,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
     // body layer and keep it aligned with the anchor. Moving a focused node
     // within the same document preserves focus and CodeMirror state.
     useLayoutEffect(() => {
+      if (expansionMode !== "overlay") return undefined;
       const layer = getOverlayLayer();
       const host = hostRef.current;
       const anchor = anchorRef.current;
@@ -542,7 +521,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           anchor.appendChild(host);
           movingDomRef.current = false;
         }
-        layer.style.display = "none";
+        if (!layer.firstChild) layer.style.display = "none";
       };
 
       if (!focused || expansionMode !== "overlay") {
@@ -560,7 +539,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           viewRef.current?.contentDOM.blur();
           return;
         }
-        const height = Math.min(focusedHeight, window.innerHeight - 16);
+        const height = Math.min(focusedHeightRef.current, window.innerHeight - 16);
         const top = Math.max(
           8,
           Math.min(rect.top, window.innerHeight - height - 8),
@@ -643,6 +622,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           ? null
           : new ResizeObserver(schedule);
       observer?.observe(anchor);
+      observer?.observe(host);
       return () => {
         cancelAnimationFrame(frame);
         cancelAnimationFrame(restoreRaf);
@@ -654,7 +634,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         window.removeEventListener("resize", schedule);
         restore();
       };
-    }, [focused, expansionMode, focusedHeight, safeMinHeight]);
+    }, [focused, expansionMode, safeMinHeight]);
 
     const [popoverPosition, setPopoverPosition] =
       useState<PopoverPosition | null>(null);
@@ -2536,7 +2516,6 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
       </div>
     );
   },
-  areVariableTextEditorPropsEqual,
 );
 
 VariableTextEditor.displayName = "VariableTextEditor";

@@ -650,3 +650,44 @@ it("parks an overlay editor in a body-level fixed layer while focused", async ()
     spy.mockRestore();
   }
 });
+
+it("uses the latest callback without replacing the CodeMirror view", async () => {
+  const { VariableTextEditor } = await import("../src/react/variableTextEditor");
+  const { EditorView } = await import("@codemirror/view");
+  const first = vi.fn();
+  const latest = vi.fn();
+  const mounted = render(<VariableTextEditor value="" onChange={first} />);
+  const input = screen.getByRole("textbox");
+  const editor = EditorView.findFromDOM(input)!;
+  mounted.rerender(<VariableTextEditor value="" onChange={latest} />);
+  act(() => editor.dispatch({ changes: { from: 0, insert: "updated" } }));
+  expect(first).not.toHaveBeenCalled();
+  expect(latest).toHaveBeenCalledWith("updated");
+  expect(EditorView.findFromDOM(input)).toBe(editor);
+});
+
+it("does not reparent a focused overlay when typing expands its height", async () => {
+  const { VariableTextEditor } = await import("../src/react/variableTextEditor");
+  const { EditorView } = await import("@codemirror/view");
+  const rect = new DOMRect(100, 120, 400, 28);
+  const spy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(rect);
+  try {
+    render(<VariableTextEditor value="" expansionMode="overlay" minHeight={28} />);
+    const input = screen.getByRole("textbox");
+    act(() => input.focus());
+    await waitFor(() => expect(document.activeElement).toBe(input));
+    const layer = document.querySelector("[data-pd-overlay-layer]")!;
+    await waitFor(() => expect(layer.contains(input)).toBe(true));
+    const changes: MutationRecord[] = [];
+    const observer = new MutationObserver((records) => changes.push(...records));
+    observer.observe(layer, { childList: true });
+    Object.defineProperty(input, "scrollHeight", { configurable: true, value: 76 });
+    act(() => EditorView.findFromDOM(input)!.dispatch({ changes: { from: 0, insert: "long value" } }));
+    await waitFor(() => expect(input.closest("[data-wrapped]")).not.toBeNull());
+    expect(document.activeElement).toBe(input);
+    expect(changes).toHaveLength(0);
+    observer.disconnect();
+  } finally {
+    spy.mockRestore();
+  }
+});

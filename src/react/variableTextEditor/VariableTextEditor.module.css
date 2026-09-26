@@ -92,7 +92,7 @@
 
 .root[data-focused] :global(.cm-scroller) {
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .root[data-focused] :global(.cm-content) {
@@ -100,7 +100,7 @@
   min-width: 0;
   min-height: 0 !important;
   height: auto !important;
-  padding-block: var(--editor-padding-block, 4px);
+  padding-block: max(0px, calc((var(--editor-min-height) - var(--editor-line-height)) / 2));
   white-space: pre-wrap !important;
   overflow-wrap: anywhere !important;
   word-break: normal !important;
@@ -212,8 +212,6 @@
   z-index: 1;
   display: inline;
   padding: 2px 0;
-  /* padding: 2px 3px; */
-  /* margin: 0 2px; */
   border-radius: var(--radius-sm, 4px);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -248,6 +246,8 @@
   position: fixed;
   z-index: 1600;
   box-sizing: border-box;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
   width: min(360px, calc(100vw - 24px));
   padding: 14px;
   color: var(--color-text-primary, #202124);
@@ -321,7 +321,6 @@
   color: var(--color-text-primary, #202124);
   background: var(--color-surface-subtle, #f8f9fa);
   border-radius: var(--radius-sm, 6px);
-  /* font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; */
   font-family: var(--font-family-ui, Inter), sans-serif;
   white-space: pre-wrap;
 }
@@ -411,16 +410,9 @@
   line-height: var(--editor-line-height);
 }
 
-.root[data-focused] :global(.cm-scroller) {
-  overflow-y: auto;
-}
 .root[data-focused]:hover :global(.cm-scroller),
 .root[data-focused]:focus-within :global(.cm-scroller) {
   scrollbar-color: var(--color-border-strong, #ccd2d8) transparent;
-}
-.hoverPopover {
-  max-height: calc(100dvh - 24px);
-  overflow: auto;
 }
 
 .root[data-focused][data-multiline] :global(.cm-line) {
