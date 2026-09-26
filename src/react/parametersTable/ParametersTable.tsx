@@ -368,8 +368,9 @@ export const ParameterTable = memo(function ParameterTable(
       const previousRows = rowsRef.current;
       const nextValues = { ...valuesRef.current };
       let valuesChanged = false;
+      const nextRowsById = new Map(nextRows.map((row) => [row.id, row]));
       for (const previous of previousRows) {
-        const nextRow = nextRows.find((row) => row.id === previous.id);
+        const nextRow = nextRowsById.get(previous.id);
         const oldKey = parameterKey(previous.parameter);
         const newKey = nextRow && parameterKey(nextRow.parameter);
         if (

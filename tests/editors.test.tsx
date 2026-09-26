@@ -725,3 +725,20 @@ it("keeps a single-line parameter editor in its cell during focus and typing", a
   expect(document.activeElement).toBe(input);
   expect(host.closest("[data-pd-overlay-layer]")).toBeNull();
 });
+
+it("updates accessible parameter names without reconfiguring the editor on deletion", async () => {
+  const { VariableTextEditor } = await import("../src/react/variableTextEditor");
+  const { EditorView } = await import("@codemirror/view");
+  const mounted = render(<VariableTextEditor value="token" ariaLabel="Name for token" />);
+  const input = screen.getByRole("textbox", { name: "Name for token" });
+  const editor = EditorView.findFromDOM(input)!;
+  act(() => editor.focus());
+  const dispatch = vi.spyOn(editor, "dispatch");
+  mounted.rerender(<VariableTextEditor value="token" ariaLabel="Name for toke" />);
+  expect(input.getAttribute("aria-label")).toBe("Name for toke");
+  expect(dispatch).not.toHaveBeenCalled();
+  act(() => editor.dispatch({ changes: { from: 4, to: 5 } }));
+  expect(editor.state.doc.toString()).toBe("toke");
+  expect(document.activeElement).toBe(input);
+  dispatch.mockRestore();
+});

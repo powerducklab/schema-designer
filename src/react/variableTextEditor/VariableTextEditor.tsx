@@ -1615,7 +1615,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
 
             ariaCompartmentRef.current.of(
               EditorView.contentAttributes.of({
-                "aria-label": ariaLabel,
+
 
                 "aria-disabled": disabledRef.current ? "true" : "false",
 
@@ -2227,7 +2227,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
 
           ariaCompartmentRef.current.reconfigure(
             EditorView.contentAttributes.of({
-              "aria-label": ariaLabel,
+
 
               "aria-disabled": disabled ? "true" : "false",
 
@@ -2240,7 +2240,13 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
           ),
         ],
       });
-    }, [ariaLabel, closeHover, disabled, readOnly, safeMinHeight]);
+    }, [closeHover, disabled, readOnly, safeMinHeight]);
+
+    // Accessible names change while parameter keys are edited. Updating the
+    // attribute must not reconfigure the editor and all of its extensions.
+    useEffect(() => {
+      viewRef.current?.contentDOM.setAttribute("aria-label", ariaLabel);
+    }, [ariaLabel]);
 
     /**
      * Variables synchronization.
