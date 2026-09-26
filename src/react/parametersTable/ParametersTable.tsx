@@ -454,7 +454,7 @@ export const ParameterTable = memo(function ParameterTable(
     const generated = new Map<string, ParameterRow>();
     await Promise.all(
       snapshot.map(async (row, rowIndex) => {
-        if (!selectedIds.has(row.id)) return;
+        if (!selectedIds.has(row.id) || !row.parameter.name?.trim()) return;
         try {
           const context: ParameterTableGeneratorContext = {
             parameter: row.parameter,

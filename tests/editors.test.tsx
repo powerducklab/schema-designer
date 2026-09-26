@@ -758,3 +758,21 @@ it("regenerates selected existing or blank request values while retaining inclus
   fireEvent.click(screen.getByRole("button", { name: "Generate values" }));
   await waitFor(() => expect(onValuesChange).toHaveBeenLastCalledWith({ '["query","token"]': { value: "second", enabled: false } }));
 });
+
+it("skips empty and whitespace-only parameter keys during bulk generation", async () => {
+  const generateValue = vi.fn().mockResolvedValue("generated");
+  const changed = vi.fn();
+  render(provider(<ParameterTable parameters={[
+    { name: "", in: "query", schema: { type: "string" } },
+    { name: "   ", in: "header", schema: { type: "string" } },
+    { name: "token", in: "query", schema: { type: "string" } },
+  ]} mode="request" onValuesChange={changed} generateValue={generateValue} />));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Select all parameters" }).closest("label")!);
+  fireEvent.click(await screen.findByRole("button", { name: "Generate values" }));
+  await waitFor(() => expect(changed).toHaveBeenCalled());
+  expect(generateValue).toHaveBeenCalledTimes(1);
+  expect(generateValue.mock.calls[0][0].parameter.name).toBe("token");
+  expect(changed.mock.calls.at(-1)?.[0]).toEqual({
+    '["query","token"]': { value: "generated", enabled: true },
+  });
+});
