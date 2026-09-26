@@ -591,7 +591,7 @@ it('request tables promote the draft and append a new blank row', async () => {
   act(()=>editor.dispatch({changes:{from:0,insert:'search'}}));
   await waitFor(()=>expect(changed).toHaveBeenLastCalledWith([{name:'search',in:'query',schema:{type:'string'}}]));
   expect(screen.getByRole('textbox',{name:'Name for search'})).toBe(input);
-  expect(screen.getByRole('textbox',{name:'Name for',exact:true})).not.toBe(input);
+  expect(screen.getByRole('textbox',{name:'Name for'})).not.toBe(input);
 });
 
 it("parks an overlay editor in a body-level fixed layer while focused", async () => {
@@ -641,7 +641,7 @@ it("parks an overlay editor in a body-level fixed layer while focused", async ()
     expect(layer.querySelector(".cm-editor")).not.toBeNull();
 
     await act(async () => {
-      fireEvent.blur(input);
+      input.blur();
     });
     await waitFor(() => expect(layer.style.display).toBe("none"));
     // Editor is returned to its anchor after blur.

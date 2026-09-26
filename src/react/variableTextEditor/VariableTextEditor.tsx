@@ -1936,7 +1936,7 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
                 return false;
               },
 
-              blur(): boolean {
+              blur(event: FocusEvent): boolean {
                 if (destroyedRef.current || viewRef.current !== view) {
                   return false;
                 }
@@ -1951,9 +1951,10 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
                 // synthetic blur that leaves this editor active, is genuine.
                 if (awaitingRefocusRef.current) {
                   const doc = view.dom.ownerDocument;
-                  const related = (arguments[1] as FocusEvent | undefined)
-                    ?.relatedTarget;
-                  if (related == null && doc.activeElement === doc.body) {
+                  if (
+                    event.relatedTarget == null &&
+                    doc.activeElement === doc.body
+                  ) {
                     return false;
                   }
                 }
