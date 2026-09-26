@@ -1,6 +1,6 @@
 {
   "name": "@powerduck/schema-designer",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Composable JSON Schema and OpenAPI parameter editors for React.",
   "type": "module",
   "main": "./dist/index.cjs",

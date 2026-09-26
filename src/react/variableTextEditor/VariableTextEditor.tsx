@@ -380,8 +380,8 @@ function getOverlayLayer(): HTMLDivElement | null {
     layer.style.border =
       "1px solid var(--color-border-default, #d6d9dd)";
     layer.style.borderRadius = "var(--radius-md, 8px)";
-    layer.style.boxShadow =
-      "var(--shadow-lg, 0 12px 32px rgb(60 64 67 / 18%))";
+    layer.style.boxSizing = "content-box";
+    layer.style.transform = "translate(-1px, -1px)";
     layer.style.overflow = "hidden";
     document.body.appendChild(layer);
     sharedOverlayLayer = layer;
@@ -566,6 +566,25 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
         const moved = host.parentNode !== layer;
         const activeView = viewRef.current;
         if (moved) {
+          // Preserve inherited typography and scoped theme tokens when moving
+          // the editor out of its table cell. The border sits outside its bounds.
+          const computed = window.getComputedStyle(host);
+          for (const property of Array.from(layer.style)) {
+            if (property.startsWith("--")) layer.style.removeProperty(property);
+          }
+          for (const property of Array.from(computed)) {
+            if (property.startsWith("--")) {
+              layer.style.setProperty(property, computed.getPropertyValue(property));
+            }
+          }
+          for (const property of [
+            "font-family", "font-size", "font-weight", "font-style",
+            "font-stretch", "font-kerning", "font-feature-settings",
+            "font-variation-settings", "letter-spacing", "text-transform",
+            "direction",
+          ]) {
+            layer.style.setProperty(property, computed.getPropertyValue(property));
+          }
           const wantsFocus = focusedRef.current;
           // Swallow the synthetic focus/blur dispatched synchronously by the
           // DOM move itself.

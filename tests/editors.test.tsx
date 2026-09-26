@@ -625,6 +625,10 @@ it("parks an overlay editor in a body-level fixed layer while focused", async ()
     );
 
     const input = screen.getByRole("textbox") as HTMLElement;
+    const host = input.closest("[data-expansion]") as HTMLElement;
+    host.style.fontWeight = "500";
+    host.style.letterSpacing = "0.25px";
+    host.style.setProperty("--font-family-ui", "Arial");
     act(() => input.focus());
 
     await waitFor(() => {
@@ -637,6 +641,13 @@ it("parks an overlay editor in a body-level fixed layer while focused", async ()
     const layer = document.querySelector(
       "[data-pd-overlay-layer]",
     ) as HTMLElement;
+    expect(layer.style.boxShadow).toBe("");
+    expect(layer.style.boxSizing).toBe("content-box");
+    expect(layer.style.transform).toBe("translate(-1px, -1px)");
+    expect(layer.style.width).toBe("400px");
+    expect(layer.style.letterSpacing).toBe("0.25px");
+    expect(layer.style.fontWeight).toBe("500");
+    expect(layer.style.getPropertyValue("--font-family-ui")).toBe("Arial");
     // The CodeMirror host is moved out of the (possibly transformed) table cell.
     expect(layer.querySelector(".cm-editor")).not.toBeNull();
 

@@ -346,23 +346,12 @@
   box-shadow: none;
 }
 
-/* An embedded editor that expands as an overlay floats above the row, so it
-   keeps its own surface plus a border and shadow to read as a popover. */
-.root[data-wrapped][data-expansion="overlay"] {
-  border: 1px solid var(--color-border-strong, #ccd2d8);
-  box-shadow: var(--shadow-lg, 0 12px 32px rgb(60 64 67 / 18%));
-}
-
-/* field: standalone input matching the baseUi TextInput. The 1px border is
-   always reserved; focus only changes its color and adds an outer ring, so the
-   box never resizes. */
+/* Standalone fields reserve their border before focus, matching baseUi. */
 .root[data-variant="field"] {
   border: 1px solid var(--color-border-subtle, #eceff1);
   border-radius: var(--radius-md, 6px);
   background: var(--color-surface, #fff);
-  transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+  transition: border-color 120ms ease;
 }
 
 .root[data-variant="field"]:hover:not([data-disabled]):not([data-readonly]) {
@@ -370,7 +359,7 @@
 }
 
 .root[data-variant="field"][data-focused] {
-  border-color: var(--color-accent, #f28c28);
+  border-color: var(--color-border-default, #dadce0);
   border-radius: var(--radius-md, 6px);
   background: var(--color-surface, #fff);
   box-shadow: none;
