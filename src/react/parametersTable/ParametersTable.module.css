@@ -529,8 +529,38 @@
 }
 
 .includeSwitch {
+  --switch-width: 24px;
+  --switch-height: 14px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
+.includeSwitch :global([data-part="control"]) {
+  width: 24px;
+  height: 14px;
+  min-width: 24px;
+  padding: 2px;
+  border: 0;
+  background: var(--color-border-strong, #aab4c2);
+  box-shadow: none;
+}
+.includeSwitch :global([data-part="control"][data-state="checked"]) {
+  background: var(--color-accent, #f28c28);
+}
+.includeSwitch :global([data-part="thumb"]) {
+  width: 10px;
+  height: 10px;
+  scale: 1;
+  background: #fff;
+  box-shadow: none;
+}
+.includeSwitch :global([data-part="control"][data-focus-visible]) { outline: 2px solid var(--color-border-focus, #66758a); outline-offset: 2px; }
+.settingsTrigger { opacity: 0; pointer-events: none; }
+.row:hover .settingsTrigger,
+.row:focus-within .settingsTrigger,
+.settingsTrigger[aria-expanded="true"] { opacity: 1; pointer-events: auto; }
+@media (hover: none) { .settingsTrigger { opacity: 1; pointer-events: auto; } }
 
 .actionBarLeft {
   display: flex;
@@ -618,6 +648,7 @@
 }
 .variableTextEditor > :global(button) {
   flex-shrink: 0;
+  color: var(--color-text-secondary, #6f747c);
 }
 .variableTextEditor > :global(div) {
   flex: 1;
@@ -637,9 +668,6 @@
 .cell :global(select:hover),
 .cell :global(select:focus-visible) {
   border-color: var(--color-border-default, #e0e4e8);
-}
-.variableTextEditor > :global(button) {
-  color: var(--color-text-secondary, #6f747c);
 }
 
 .root[data-sticky-header="false"] .headerCell {

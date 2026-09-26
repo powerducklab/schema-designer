@@ -1,5 +1,6 @@
 import { VscSettingsCompact } from "react-icons/vsc";
 import { SettingsPanel } from "../shared/SettingsPanel";
+import tableStyles from "./ParametersTable.module.css";
 import inlineStyles from "../inlineSchemaEditor/InlineSchemaEditor.module.css";
 import {
   Button,
@@ -41,6 +42,7 @@ export function ParameterSettings({
     >
       <Popover.Trigger asChild>
         <Button
+          className={tableStyles.settingsTrigger}
           width="24px"
           minWidth="24px"
           height="24px"

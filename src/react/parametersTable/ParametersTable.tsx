@@ -454,19 +454,7 @@ export const ParameterTable = memo(function ParameterTable(
     const generated = new Map<string, ParameterRow>();
     await Promise.all(
       snapshot.map(async (row, rowIndex) => {
-        if (
-          !selectedIds.has(row.id) ||
-          (!controlledValuesRef.current &&
-            Object.prototype.hasOwnProperty.call(row, "generatedValue"))
-        )
-          return;
-        const key = parameterKey(row.parameter);
-        if (
-          valuesSnapshot?.[key] ||
-          resolveParameterValue(row.parameter, props.document).source !==
-            "missing"
-        )
-          return;
+        if (!selectedIds.has(row.id)) return;
         try {
           const context: ParameterTableGeneratorContext = {
             parameter: row.parameter,

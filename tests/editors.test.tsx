@@ -742,3 +742,19 @@ it("updates accessible parameter names without reconfiguring the editor on delet
   expect(document.activeElement).toBe(input);
   dispatch.mockRestore();
 });
+
+
+it("regenerates selected existing or blank request values while retaining inclusion", async () => {
+  const parameter = { name: "token", in: "query" as const, schema: { type: "string", default: "default" } };
+  const generateValue = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
+  const onValuesChange = vi.fn();
+  const parameters = [parameter];
+  const table = (value: string) => provider(<ParameterTable parameters={parameters} mode="request" values={{ '["query","token"]': { value, enabled: false } }} onValuesChange={onValuesChange} generateValue={generateValue} />);
+  const view = render(table(""));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Select token" }).closest("label")!);
+  fireEvent.click(await screen.findByRole("button", { name: "Generate values" }));
+  await waitFor(() => expect(onValuesChange).toHaveBeenLastCalledWith({ '["query","token"]': { value: "first", enabled: false } }));
+  view.rerender(table("first"));
+  fireEvent.click(screen.getByRole("button", { name: "Generate values" }));
+  await waitFor(() => expect(onValuesChange).toHaveBeenLastCalledWith({ '["query","token"]': { value: "second", enabled: false } }));
+});
