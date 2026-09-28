@@ -14,19 +14,32 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { InlineSchemaEditor } from "../inlineSchemaEditor/InlineSchemaEditor";
-import type { OpenApiParameter } from "./libs/types";
+import {
+  DEFAULT_PARAMETER_TABLE_LABELS,
+  type OpenApiParameter,
+  type ParameterTableLabels,
+} from "./libs/types";
 
 export function ParameterSettings({
   parameter,
   document,
   disabled,
   onChange,
+  labels,
 }: {
   parameter: OpenApiParameter;
   document?: Record<string, unknown>;
   disabled?: boolean;
   onChange: (parameter: OpenApiParameter) => void;
+  labels?: Partial<ParameterTableLabels>;
 }) {
+  const l: ParameterTableLabels = {
+    ...DEFAULT_PARAMETER_TABLE_LABELS,
+    ...labels,
+  };
+  const configureLabel = l.configureRow
+    .split("{{name}}")
+    .join(parameter.name ?? "");
   const patch = (value: Partial<OpenApiParameter>) => {
     if (!disabled) onChange({ ...parameter, ...value });
   };
@@ -49,15 +62,15 @@ export function ParameterSettings({
           padding="0"
           size="xs"
           variant="ghost"
-          aria-label={`Configure ${parameter.name}`}
-          title={`Configure ${parameter.name}`}
+          aria-label={configureLabel}
+          title={configureLabel}
         >
           <VscSettingsCompact size={16} />
         </Button>
       </Popover.Trigger>
       <Portal>
         <Popover.Positioner>
-          <SettingsPanel title={parameter.name || "Parameter"}>
+          <SettingsPanel title={parameter.name || l.settingsTitle}>
             <div className={inlineStyles.root}>
               <Tabs.Root
                 variant="plain"
@@ -66,13 +79,13 @@ export function ParameterSettings({
                 unmountOnExit
               >
                 <Tabs.List>
-                  <Tabs.Trigger value="schema">Schema</Tabs.Trigger>
-                  <Tabs.Trigger value="parameter">Parameter</Tabs.Trigger>
+                  <Tabs.Trigger value="schema">{l.tabSchema}</Tabs.Trigger>
+                  <Tabs.Trigger value="parameter">{l.tabParameter}</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="parameter" pt="2">
                   <Stack gap="2">
                     <Field.Root>
-                      <Field.Label>Location</Field.Label>
+                      <Field.Label>{l.location}</Field.Label>
                       <NativeSelect.Root disabled={disabled}>
                         <NativeSelect.Field
                           value={parameter.in}
@@ -107,10 +120,10 @@ export function ParameterSettings({
                     >
                       <Switch.HiddenInput />
                       <Switch.Control />
-                      <Switch.Label>Required</Switch.Label>
+                      <Switch.Label>{l.required}</Switch.Label>
                     </Switch.Root>
                     <Field.Root>
-                      <Field.Label>Description</Field.Label>
+                      <Field.Label>{l.description}</Field.Label>
                       <Input
                         value={parameter.description ?? ""}
                         disabled={disabled}
@@ -120,14 +133,14 @@ export function ParameterSettings({
                       />
                     </Field.Root>
                     <details className={inlineStyles.reference}>
-                      <summary>Serialization</summary>
+                      <summary>{l.serialization}</summary>
                       <Stack gap="2" pt="2">
                         <Field.Root>
-                          <Field.Label>Serialization style</Field.Label>
+                          <Field.Label>{l.serializationStyle}</Field.Label>
                           <Input
                             value={parameter.style ?? ""}
                             disabled={disabled}
-                            placeholder="Default for location"
+                            placeholder={l.defaultForLocation}
                             onChange={(event) =>
                               patch({ style: event.target.value || undefined })
                             }
@@ -142,7 +155,7 @@ export function ParameterSettings({
                         >
                           <Switch.HiddenInput />
                           <Switch.Control />
-                          <Switch.Label>Explode</Switch.Label>
+                          <Switch.Label>{l.explode}</Switch.Label>
                         </Switch.Root>
                         <Switch.Root
                           checked={!!parameter.allowReserved}
@@ -153,7 +166,7 @@ export function ParameterSettings({
                         >
                           <Switch.HiddenInput />
                           <Switch.Control />
-                          <Switch.Label>Allow reserved characters</Switch.Label>
+                          <Switch.Label>{l.allowReserved}</Switch.Label>
                         </Switch.Root>
                       </Stack>
                     </details>
@@ -161,10 +174,7 @@ export function ParameterSettings({
                 </Tabs.Content>
                 <Tabs.Content value="schema" pt="2">
                   {parameter.content ? (
-                    <p>
-                      This parameter uses content. Its media type schema is
-                      preserved.
-                    </p>
+                    <p>{l.contentPreserved}</p>
                   ) : (
                     <InlineSchemaEditor
                       schema={parameter.schema ?? {}}

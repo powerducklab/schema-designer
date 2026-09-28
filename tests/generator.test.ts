@@ -120,3 +120,26 @@ it("generates an empty array when maxItems is zero", async () => {
     }),
   ).toEqual([]);
 });
+
+it("keeps unconstrained array strings short without weakening minimum lengths", async () => {
+  for (const maxLength of [undefined, 10000]) {
+    const value = await generateParameterValue({parameter: {name: "tags", in: "query", schema: {type: "array", minItems: 2, maxItems: 2, items: {type: "string", maxLength}}}, rowIndex: 0}, {seed: 11});
+    expect(value).toHaveLength(2);
+    for (const item of value as string[]) expect(item.length).toBeLessThanOrEqual(24);
+  }
+  const value = await generateParameterValue({parameter: {name: "value", in: "query", schema: {type: "string", minLength: 80, maxLength: 100}}, rowIndex: 0}, {seed: 11});
+  expect((value as string).length).toBe(80);
+});
+
+it("generates compact readable tags across seeds", async () => {
+  for (let seed = 0; seed < 30; seed++) {
+    const value = await generateParameterValue({parameter: {name: "tags", in: "query", schema: {type: "array", items: {type: "string"}}}, rowIndex: 0}, {seed}) as string[];
+    expect(value.length).toBeLessThanOrEqual(3);
+    for (const tag of value) expect(tag).toMatch(/^[a-z]{3,8}$/i);
+    expect(JSON.stringify(value).length).toBeLessThanOrEqual(34);
+  }
+});
+it("keeps nested object string samples short under large schema ceilings", async () => {
+  const value = await generateParameterValue({parameter: {name: "payload", in: "query", schema: {type: "object", required: ["tag"], properties: {tag: {type: "string", maxLength: 10000}}}}, rowIndex: 0}, {seed: 11}) as {tag: string};
+  expect(value.tag.length).toBeLessThanOrEqual(24);
+});

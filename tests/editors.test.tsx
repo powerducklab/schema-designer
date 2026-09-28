@@ -776,3 +776,38 @@ it("skips empty and whitespace-only parameter keys during bulk generation", asyn
     '["query","token"]': { value: "generated", enabled: true },
   });
 });
+
+
+it("keeps selection, toolbar and row editors through controlled generation echoes", async () => {
+  const generateValue = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
+  function Host() {
+    const [values, setValues] = useState({});
+    return <ParameterTable
+      parameters={[{ name: "token", in: "query", schema: { type: "string" } }]}
+      mode="request" autoAppendLocation="query" values={values}
+      onValuesChange={setValues} generateValue={generateValue}
+    />;
+  }
+  render(provider(<Host />));
+  const selected = screen.getByRole("checkbox", { name: "Select token" }) as HTMLInputElement;
+  const row = selected.closest("tr");
+  const editors = [...document.querySelectorAll(".cm-content")];
+  fireEvent.click(selected.closest("label")!);
+  const toolbar = await screen.findByRole("toolbar", { name: "Selected parameter actions" });
+  for (const expected of ["first", "second"]) {
+    fireEvent.click(screen.getByRole("button", { name: "Generate values" }));
+    await waitFor(() => expect(row?.textContent).toContain(expected));
+    expect(selected.checked).toBe(true);
+    expect(screen.getByRole("toolbar", { name: "Selected parameter actions" })).toBe(toolbar);
+    expect(screen.getByRole("checkbox", { name: "Select token" }).closest("tr")).toBe(row);
+    expect([...document.querySelectorAll(".cm-content")]).toEqual(editors);
+  }
+});
+
+it("removes selection when external parameters replace the selected field", () => {
+  const table = (name: string) => provider(<ParameterTable parameters={[{name, in: "query"}]} mode="request" autoAppendLocation="query" />);
+  const view = render(table("old"));
+  fireEvent.click(screen.getByRole("checkbox", {name: "Select old"}).closest("label")!);
+  view.rerender(table("replacement"));
+  expect(screen.queryByRole("toolbar", {name: "Selected parameter actions"})).toBeNull();
+});

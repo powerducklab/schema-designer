@@ -43,9 +43,11 @@ import type {
   OpenApiParameter,
   ParameterRow,
   ParameterTableGeneratorContext,
+  ParameterTableLabels,
   ParameterTableProps,
   SplitterResizeSession,
 } from "./libs/types";
+import { DEFAULT_PARAMETER_TABLE_LABELS } from "./libs/types";
 
 import {
   DEFAULT_COLUMNS,
@@ -76,11 +78,11 @@ import {
 
 const EMPTY_VARIABLES = Object.freeze([]) as readonly never[];
 const CHECKBOX_COLUMN_WIDTH = 48;
-const RowDragHandle = memo(function RowDragHandle() {
+const RowDragHandle = memo(function RowDragHandle({ label }: { label: string }) {
   return (
     <Box
       className={styles.dragHandle}
-      aria-label="Drag to reorder"
+      aria-label={label}
       role="button"
     >
       <LuGripVertical size={14} />
@@ -106,6 +108,29 @@ export const ParameterTable = memo(function ParameterTable(
     height = "100%",
     className,
   } = props;
+
+  const labels: ParameterTableLabels = {
+    ...DEFAULT_PARAMETER_TABLE_LABELS,
+    ...props.labels,
+  };
+  const columnLabel = (id: ColumnId): string => {
+    switch (id) {
+      case "name":
+        return labels.name;
+      case "value":
+        return labels.value;
+      case "type":
+        return labels.type;
+      case "required":
+        return labels.required;
+      case "description":
+        return labels.description;
+      default:
+        return id;
+    }
+  };
+  const fillLabel = (template: string, token: string, value: string): string =>
+    template.split(`{{${token}}}`).join(value || "");
 
   const appendLocation = !props.readOnly ? props.autoAppendLocation : undefined;
   const ensureDraft = useCallback(
@@ -219,9 +244,29 @@ export const ParameterTable = memo(function ParameterTable(
       return;
     }
 
-    setRows((previous) => ensureDraft(reconcileRows(previous, parameters)));
-    setSelectedIds(new Set());
-  }, [parameters, ensureDraft]);
+    const previous = rowsRef.current;
+    // Value updates may arrive with a newly allocated, equivalent schema array.
+    // Keep the draft row and editor instances intact in that case too.
+    const currentParameters = previous
+      .filter((row) => !appendLocation || row.parameter.name)
+      .map((row) => row.parameter);
+    const draftMatches = !appendLocation || previous.some(
+      (row) => !row.parameter.name && row.parameter.in === appendLocation,
+    );
+    if (draftMatches && areParameterArraysEqual(currentParameters, parameters)) return;
+    const next = ensureDraft(reconcileRows(previous, parameters));
+    rowsRef.current = next;
+    setRows(next);
+    const previousById = new Map(previous.map((row) => [row.id, row.parameter]));
+    const survivingIds = new Set(next.filter((row) => {
+      const old = previousById.get(row.id);
+      return old && old.name === row.parameter.name && old.in === row.parameter.in;
+    }).map((row) => row.id));
+    setSelectedIds((selected) => {
+      const retained = new Set([...selected].filter((id) => survivingIds.has(id)));
+      return retained.size === selected.size ? selected : retained;
+    });
+  }, [parameters, ensureDraft, appendLocation]);
 
   useEffect(() => {
     onSelectionChange?.([...selectedIds]);
@@ -475,7 +520,7 @@ export const ParameterTable = memo(function ParameterTable(
             setGenerationError(
               error instanceof Error
                 ? error.message
-                : "Value generation failed.",
+                : labels.generationFailed,
             );
             try {
               props.onError?.(error);
@@ -511,6 +556,7 @@ export const ParameterTable = memo(function ParameterTable(
     readOnly,
     props.onError,
     props.document,
+    labels.generationFailed,
   ]);
 
   const onDragEnd = useCallback(
@@ -838,12 +884,12 @@ export const ParameterTable = memo(function ParameterTable(
         )}
         <Box className={styles.toolbar}>
           <Box className={styles.toolbarLeft}>
-            <Text className={styles.toolbarTitle}>Parameters</Text>
+            <Text className={styles.toolbarTitle}>{labels.parametersTitle}</Text>
           </Box>
         </Box>
 
         <Box className={styles.empty}>
-          {emptyState ?? <Text>No parameters defined.</Text>}
+          {emptyState ?? <Text>{labels.noParameters}</Text>}
         </Box>
       </Box>
     );
@@ -864,11 +910,11 @@ export const ParameterTable = memo(function ParameterTable(
         <div
           className={styles.actionBarContent}
           role="toolbar"
-          aria-label="Selected parameter actions"
+          aria-label={labels.selectedActions}
         >
           <Box className={styles.actionBarLeft}>
             <Span className={styles.actionBarTrigger}>
-              {selectedIds.size} selected
+              {fillLabel(labels.selectedCount, "count", String(selectedIds.size))}
             </Span>
           </Box>
 
@@ -882,7 +928,7 @@ export const ParameterTable = memo(function ParameterTable(
             onClick={handleDeleteSelected}
           >
             <AiOutlineDelete className={styles.actionIcon} />
-            Delete
+            {labels.deleteSelected}
           </Button>
 
           <Span className={styles.actionBarDivider} />
@@ -895,7 +941,7 @@ export const ParameterTable = memo(function ParameterTable(
             onClick={handleGenerate}
           >
             <LuRefreshCw className={styles.actionIcon} />
-            Generate values
+            {labels.generateValues}
           </Button>
         </div>
       )}
@@ -947,7 +993,7 @@ export const ParameterTable = memo(function ParameterTable(
                               handleSelectAll(details.checked === true)
                             }
                             size="sm"
-                            aria-label="Select all parameters"
+                            aria-label={labels.selectAll}
                             className={styles.checkboxRoot}
                           >
                             <Checkbox.HiddenInput />
@@ -965,7 +1011,7 @@ export const ParameterTable = memo(function ParameterTable(
                         >
                           <Box className={styles.headerContent}>
                             <Span className={styles.headerLabel}>
-                              {column.label}
+                              {columnLabel(column.id)}
                             </Span>
 
                             {getRightNeighborId(visibleColumns, column.id) && (
@@ -1017,7 +1063,11 @@ export const ParameterTable = memo(function ParameterTable(
                                 className={styles.resizeHandle}
                                 role="separator"
                                 aria-orientation="vertical"
-                                aria-label={`Resize ${column.label} column`}
+                                aria-label={fillLabel(
+                                  labels.resizeColumn,
+                                  "label",
+                                  columnLabel(column.id),
+                                )}
                                 onPointerDown={(event) =>
                                   onResizeStart(event, column)
                                 }
@@ -1074,9 +1124,13 @@ export const ParameterTable = memo(function ParameterTable(
                                         ? "none"
                                         : undefined
                                     }
-                                    aria-label={`Drag ${parameter.name ?? ""}`}
+                                    aria-label={fillLabel(
+                                      labels.dragRow,
+                                      "name",
+                                      parameter.name ?? "",
+                                    )}
                                   >
-                                    <RowDragHandle />
+                                    <RowDragHandle label={labels.dragToReorder} />
                                   </Box>
 
                                   <Checkbox.Root
@@ -1088,9 +1142,15 @@ export const ParameterTable = memo(function ParameterTable(
                                         details.checked === true,
                                       )
                                     }
-                                    aria-label={`Select ${
-                                      parameter.name ?? "parameter"
-                                    }`}
+                                    aria-label={
+                                      parameter.name
+                                        ? fillLabel(
+                                            labels.selectRow,
+                                            "name",
+                                            parameter.name,
+                                          )
+                                        : labels.selectUnnamedParameter
+                                    }
                                     className={styles.checkboxRoot}
                                   >
                                     <Checkbox.HiddenInput />
@@ -1112,11 +1172,15 @@ export const ParameterTable = memo(function ParameterTable(
                                         >
                                           <VariableTextEditor
                                             autoFocus={false}
-                                            ariaLabel={`Name for ${parameter.name}`}
+                                            ariaLabel={fillLabel(
+                                              labels.nameField,
+                                              "name",
+                                              parameter.name ?? "",
+                                            )}
                                             readOnly={readOnly || lockStructure}
                                             value={String(parameter.name ?? "")}
                                             onSubmit={() => {}}
-                                            placeholder="Name"
+                                            placeholder={labels.namePlaceholder}
                                             variables={
                                               props.variables ?? EMPTY_VARIABLES
                                             }
@@ -1140,6 +1204,7 @@ export const ParameterTable = memo(function ParameterTable(
                                             <ParameterSettings
                                               parameter={parameter}
                                               document={props.document}
+                                              labels={labels}
                                               disabled={
                                                 readOnly || lockStructure
                                               }
@@ -1181,10 +1246,14 @@ export const ParameterTable = memo(function ParameterTable(
                                               }
                                               title={
                                                 parameter.in === "path"
-                                                  ? "Path parameters are required"
-                                                  : "Include in request"
+                                                  ? labels.pathParametersRequired
+                                                  : labels.includeInRequest
                                               }
-                                              aria-label={`Include ${parameter.name}`}
+                                              aria-label={fillLabel(
+                                                labels.includeRow,
+                                                "name",
+                                                parameter.name ?? "",
+                                              )}
                                               onCheckedChange={(event) => {
                                                 const key =
                                                   parameterKey(parameter);
@@ -1213,9 +1282,14 @@ export const ParameterTable = memo(function ParameterTable(
                                               </Switch.Control>
                                             </Switch.Root>
                                           )}
-                                          <VariableTextEditor
+                                          {(() => {
+                                            const editor = (<VariableTextEditor
                                             autoFocus={false}
-                                            ariaLabel={`Value for ${parameter.name}`}
+                                            ariaLabel={fillLabel(
+                                              labels.valueField,
+                                              "name",
+                                              parameter.name ?? "",
+                                            )}
                                             readOnly={readOnly}
                                             value={parameterValueText(
                                               Object.hasOwn(
@@ -1228,7 +1302,7 @@ export const ParameterTable = memo(function ParameterTable(
                                                 : displayValue.value,
                                             )}
                                             onSubmit={() => {}}
-                                            placeholder="Value"
+                                            placeholder={labels.valuePlaceholder}
                                             variables={
                                               props.variables ?? EMPTY_VARIABLES
                                             }
@@ -1240,7 +1314,9 @@ export const ParameterTable = memo(function ParameterTable(
                                             onChange={(value) => {
                                               editValue(row.id, value);
                                             }}
-                                          />
+                                          />);
+                                            return props.renderValueControl ? props.renderValueControl(parameter, editor) : editor;
+                                          })()}
                                         </Box>
                                       </Table.Cell>
                                     );
@@ -1288,12 +1364,16 @@ export const ParameterTable = memo(function ParameterTable(
 
                                             <Select.Control>
                                               <Select.Trigger
-                                                aria-label={`Type for ${parameter.name}`}
+                                                aria-label={fillLabel(
+                                                  labels.typeField,
+                                                  "name",
+                                                  parameter.name ?? "",
+                                                )}
                                               >
                                                 <Select.ValueText
                                                   placeholder={
                                                     type === "unknown"
-                                                      ? "Select type"
+                                                      ? labels.selectType
                                                       : type
                                                   }
                                                 />
@@ -1343,8 +1423,8 @@ export const ParameterTable = memo(function ParameterTable(
                                         >
                                           {parameter.in === "path" ||
                                           parameter.required
-                                            ? "Required"
-                                            : "Optional"}
+                                            ? labels.required
+                                            : labels.optional}
                                         </Span>
                                       </Table.Cell>
                                     );

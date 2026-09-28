@@ -254,6 +254,8 @@ function generateStringByParameterName(
     default:
       break;
   }
+  if (hasAnyToken(tokens, ["tag", "tags", "label", "labels"]))
+    return fakerInstance.word.noun({ length: { min: 3, max: 8 } });
   if (hasAnyToken(tokens, ["uuid", "guid"])) return fakerInstance.string.uuid();
   if (hasToken(tokens, ["id", "identifier", "key"])) {
     return `usr_${fakerInstance.string.alphanumeric({ length: 10, casing: "lower" })}`;
@@ -434,10 +436,17 @@ function prepareSchemaForJsf(
         throw new RangeError(
           "String minimum exceeds the generation length budget.",
         );
-      result.maxLength = Math.min(
-        isFiniteNumber(value.maxLength) ? value.maxLength : 16_384,
-        16_384,
-      );
+      // A safety ceiling is not a requested sample length. Leave unconstrained
+      // strings to the generator's short defaults.
+      if (isFiniteNumber(value.maxLength)) {
+        result.maxLength = Math.min(value.maxLength, 16_384);
+        // A large schema ceiling must not become the default sample size in
+        // nested objects/compositions handled by json-schema-faker.
+        if (!value.pattern && !value.format) {
+          result.maxLength = Math.min(result.maxLength as number,
+            Math.max(isFiniteNumber(value.minLength) ? value.minLength : 0, 24));
+        }
+      }
     }
     for (const [key, item] of Object.entries(value)) {
       if (maps.has(key) && isRecord(item))
@@ -542,7 +551,7 @@ function generateStringWithRetry(
     );
   const length = fakerInstance.number.int({
     min: min ?? Math.min(8, max ?? 8),
-    max: Math.min(max ?? Math.max(min ?? 8, 24), 16_384),
+    max: Math.min(max ?? 16_384, Math.max(min ?? 8, 24), 16_384),
   });
   const candidate = constrainString(
     fakerInstance.string.alpha({ length, casing: "mixed" }),
