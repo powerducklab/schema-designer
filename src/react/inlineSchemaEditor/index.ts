@@ -1,5 +1,11 @@
 export { InlineSchemaEditor } from "./InlineSchemaEditor";
 
+export {
+  InlineSchemaLabelsProvider,
+  DEFAULT_INLINE_SCHEMA_LABELS,
+} from "./labels";
+export type { InlineSchemaEditorLabels } from "./labels";
+
 export type {
   CompositionKey,
   InlineSchemaEditorProps,
