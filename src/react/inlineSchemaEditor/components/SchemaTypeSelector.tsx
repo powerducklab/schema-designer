@@ -1,27 +1,42 @@
 import { createListCollection, Select, Portal } from "@chakra-ui/react";
+import { useMemo } from "react";
 import type { InlineSchemaType } from "../types";
-
-const OPTIONS = createListCollection({
-  items: [
-    { value: "any", label: "Any" },
-    { value: "string", label: "String" },
-    { value: "number", label: "Number" },
-    { value: "integer", label: "Integer" },
-    { value: "boolean", label: "Boolean" },
-    { value: "array", label: "Array" },
-    { value: "object", label: "Object" },
-    { value: "null", label: "Null" },
-  ],
-});
+import { useInlineSchemaLabels } from "../labels";
 
 export function SchemaTypeSelector(props: {
   value: InlineSchemaType;
   disabled?: boolean;
   onChange: (value: InlineSchemaType) => void;
 }) {
+  const labels = useInlineSchemaLabels();
+  const options = useMemo(
+    () =>
+      createListCollection({
+        items: [
+          { value: "any", label: labels.typeAny },
+          { value: "string", label: labels.typeString },
+          { value: "number", label: labels.typeNumber },
+          { value: "integer", label: labels.typeInteger },
+          { value: "boolean", label: labels.typeBoolean },
+          { value: "array", label: labels.typeArray },
+          { value: "object", label: labels.typeObject },
+          { value: "null", label: labels.typeNull },
+        ],
+      }),
+    [
+      labels.typeAny,
+      labels.typeString,
+      labels.typeNumber,
+      labels.typeInteger,
+      labels.typeBoolean,
+      labels.typeArray,
+      labels.typeObject,
+      labels.typeNull,
+    ],
+  );
   return (
     <Select.Root
-      collection={OPTIONS}
+      collection={options}
       size="sm"
       width="132px"
       value={[props.value]}
@@ -33,7 +48,7 @@ export function SchemaTypeSelector(props: {
       <Select.HiddenSelect />
       <Select.Control>
         <Select.Trigger>
-          <Select.ValueText placeholder="Select type" />
+          <Select.ValueText placeholder={labels.selectTypePlaceholder} />
         </Select.Trigger>
         <Select.IndicatorGroup>
           <Select.Indicator />
@@ -48,7 +63,7 @@ export function SchemaTypeSelector(props: {
             borderColor="var(--color-border-default)"
             fontSize="12px"
           >
-            {OPTIONS.items.map((item) => (
+            {options.items.map((item) => (
               <Select.Item item={item} key={item.value}>
                 {item.label}
                 <Select.ItemIndicator />

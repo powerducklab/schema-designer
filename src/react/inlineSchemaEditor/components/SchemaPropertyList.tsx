@@ -11,6 +11,7 @@ import {
   updateProperty,
 } from "../schemaUtils";
 import { SchemaPropertyRow } from "./SchemaPropertyRow";
+import { useInlineSchemaLabels } from "../labels";
 
 export const SchemaPropertyList = memo(function SchemaPropertyList(props: {
   schema: OpenApiSchema;
@@ -18,6 +19,7 @@ export const SchemaPropertyList = memo(function SchemaPropertyList(props: {
   disabled?: boolean;
   onChange: (schema: OpenApiSchema) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const properties = useMemo(() => getProperties(props.schema), [props.schema]);
   const required = useMemo(
     () => getRequiredProperties(props.schema),
@@ -50,7 +52,7 @@ export const SchemaPropertyList = memo(function SchemaPropertyList(props: {
     <Stack gap="3" className="pdDesignerSchemaSection">
       <HStack justify="space-between" align="center">
         <Text fontWeight="700" fontSize="sm">
-          Properties
+          {labels.properties}
         </Text>
         <Button
           size="xs"
@@ -58,7 +60,7 @@ export const SchemaPropertyList = memo(function SchemaPropertyList(props: {
           disabled={props.disabled}
           onClick={add}
         >
-          Add property
+          {labels.addProperty}
         </Button>
       </HStack>
 
@@ -87,7 +89,7 @@ export const SchemaPropertyList = memo(function SchemaPropertyList(props: {
 
       {!names.length ? (
         <Text fontSize="xs" color="var(--color-text-secondary)">
-          No properties defined.
+          {labels.noProperties}
         </Text>
       ) : null}
     </Stack>

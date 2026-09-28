@@ -25,6 +25,7 @@ import {
   toInputValue,
 } from "../schemaUtils";
 import { InlineSchemaEditor } from "../InlineSchemaEditor";
+import { fillLabel, useInlineSchemaLabels } from "../labels";
 
 const NestedSchemaCard = memo(function NestedSchemaCard(props: {
   title: string;
@@ -36,6 +37,7 @@ const NestedSchemaCard = memo(function NestedSchemaCard(props: {
   disabled?: boolean;
   onChange: (schema: SchemaValue) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   return (
@@ -59,9 +61,9 @@ const NestedSchemaCard = memo(function NestedSchemaCard(props: {
             variant="ghost"
             disabled={props.disabled}
             onClick={props.onRemove}
-            aria-label={`Remove ${props.title.toLowerCase()}`}
+            aria-label={fillLabel(labels.removeItem, { name: props.title })}
           >
-            Remove
+            {labels.remove}
           </Button>
         )}
         <Popover.Root
@@ -79,7 +81,9 @@ const NestedSchemaCard = memo(function NestedSchemaCard(props: {
               ref={triggerRef}
               size="xs"
               variant="outline"
-              aria-label={`Configure ${props.title.toLowerCase()}`}
+              aria-label={fillLabel(labels.configureItem, {
+                name: props.title,
+              })}
               className="pdDesignerSchemaIconButton"
             >
               <VscSettingsCompact size={16} />
@@ -111,6 +115,7 @@ export const ArraySchemaEditor = memo(function ArraySchemaEditor(props: {
   disabled?: boolean;
   onChange: (schema: OpenApiSchema) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const items =
     getArrayItems(props.schema) ?? ({ type: "string" } as OpenApiSchema);
   const prefixItems = getPrefixItems(props.schema);
@@ -124,8 +129,8 @@ export const ArraySchemaEditor = memo(function ArraySchemaEditor(props: {
   return (
     <Stack gap="4">
       <NestedSchemaCard
-        title="Items schema"
-        description="Define the schema used by each array item."
+        title={labels.itemsSchema}
+        description={labels.itemsSchemaDescription}
         schema={items}
         fullSchema={props.fullSchema}
         disabled={props.disabled}
@@ -171,12 +176,12 @@ export const ArraySchemaEditor = memo(function ArraySchemaEditor(props: {
       >
         <Switch.HiddenInput />
         <Switch.Control />
-        <Switch.Label>Unique items</Switch.Label>
+        <Switch.Label>{labels.uniqueItems}</Switch.Label>
       </Switch.Root>
 
       <NestedSchemaCard
-        title="Contains schema"
-        description="Require at least one array item to match this schema."
+        title={labels.containsSchema}
+        description={labels.containsSchemaDescription}
         schema={contains}
         fullSchema={props.fullSchema}
         disabled={props.disabled}
@@ -189,7 +194,7 @@ export const ArraySchemaEditor = memo(function ArraySchemaEditor(props: {
       <Stack gap="2" className="pdDesignerSchemaSection">
         <HStack justify="space-between" align="center">
           <Text fontSize="sm" fontWeight="700">
-            Tuple prefix items
+            {labels.tuplePrefixItems}
           </Text>
           <Button
             size="xs"
@@ -202,21 +207,21 @@ export const ArraySchemaEditor = memo(function ArraySchemaEditor(props: {
               } as OpenApiSchema)
             }
           >
-            Add prefix item
+            {labels.addPrefixItem}
           </Button>
         </HStack>
 
         {prefixItems.length === 0 ? (
           <Text fontSize="xs" color="var(--color-text-secondary)">
-            No tuple prefix items.
+            {labels.noPrefixItems}
           </Text>
         ) : null}
 
         {prefixItems.map((item, index) => (
           <NestedSchemaCard
             key={`prefix-${index}`}
-            title={`Prefix item ${index + 1}`}
-            description="Schema for the positional tuple item."
+            title={fillLabel(labels.prefixItem, { index: index + 1 })}
+            description={labels.prefixItemDescription}
             schema={item}
             fullSchema={props.fullSchema}
             disabled={props.disabled}

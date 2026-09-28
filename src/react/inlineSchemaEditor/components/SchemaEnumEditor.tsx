@@ -16,24 +16,33 @@ import {
   parseSchemaValue,
   stringifySchemaValue,
 } from "../schemaUtils";
+import {
+  fillLabel,
+  useInlineSchemaLabels,
+  type InlineSchemaEditorLabels,
+} from "../labels";
 
-function validateEnumText(type: InlineSchemaType, text: string): string {
+function validateEnumText(
+  type: InlineSchemaType,
+  text: string,
+  labels: InlineSchemaEditorLabels,
+): string {
   if (!text.trim())
-    return type === "string" ? "" : "Enter a value or remove this entry.";
+    return type === "string" ? "" : labels.enumEnterValueOrRemove;
   if (type === "integer") {
-    return Number.isInteger(Number(text)) ? "" : "Enter a valid integer.";
+    return Number.isInteger(Number(text)) ? "" : labels.enumValidInteger;
   }
   if (type === "number") {
-    return Number.isFinite(Number(text)) ? "" : "Enter a valid number.";
+    return Number.isFinite(Number(text)) ? "" : labels.enumValidNumber;
   }
   if (type === "boolean") {
-    return text === "true" || text === "false" ? "" : "Use true or false.";
+    return text === "true" || text === "false" ? "" : labels.enumUseTrueFalse;
   }
   if (type === "null") {
-    return text.trim() === "null" ? "" : 'Use "null".';
+    return text.trim() === "null" ? "" : labels.enumUseNull;
   }
   if (["array", "object", "any"].includes(type)) {
-    return canParseSchemaValue(text, type) ? "" : "Enter valid JSON.";
+    return canParseSchemaValue(text, type) ? "" : labels.enumValidJson;
   }
   return "";
 }
@@ -44,6 +53,7 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
   disabled?: boolean;
   update: (patch: Partial<OpenApiSchema>) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const values = useMemo(
     () => getEnumValues(props.schema),
     [props.schema.enum],
@@ -73,7 +83,7 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
     <Stack gap="3">
       <HStack justify="space-between" align="center">
         <Text fontSize="sm" fontWeight="600">
-          Enum
+          {labels.enum}
         </Text>
         <Button
           size="xs"
@@ -85,13 +95,13 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
             commit(nextValues);
           }}
         >
-          Add enum
+          {labels.addEnum}
         </Button>
       </HStack>
 
       {values.map((value, index) => {
         const text = drafts[index] ?? stringifySchemaValue(value);
-        const error = validateEnumText(props.type, text);
+        const error = validateEnumText(props.type, text, labels);
 
         return (
           <Box
@@ -103,7 +113,9 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
           >
             <HStack align="start" gap="2">
               <Field.Root invalid={!!error} flex="1">
-                <Field.Label>Value {index + 1}</Field.Label>
+                <Field.Label>
+                  {fillLabel(labels.enumValue, { index: index + 1 })}
+                </Field.Label>
                 <Input
                   size="sm"
                   value={text}
@@ -112,7 +124,7 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
                     const nextDrafts = [...drafts];
                     nextDrafts[index] = e.target.value;
                     setDrafts(nextDrafts);
-                    if (!validateEnumText(props.type, e.target.value)) {
+                    if (!validateEnumText(props.type, e.target.value, labels)) {
                       const next = [...values];
                       next[index] = parseSchemaValue(
                         e.target.value,
@@ -130,7 +142,7 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
                 size="xs"
                 variant="plain"
                 className="pdDesignerSchemaIconButton"
-                aria-label="Remove enum value"
+                aria-label={labels.removeEnumValue}
                 disabled={props.disabled}
                 onClick={() => {
                   const next = [...values];
@@ -150,7 +162,7 @@ export const SchemaEnumEditor = memo(function SchemaEnumEditor(props: {
 
       {values.length === 0 ? (
         <Text fontSize="xs" color="var(--color-text-secondary)">
-          No enum values.
+          {labels.noEnumValues}
         </Text>
       ) : null}
     </Stack>

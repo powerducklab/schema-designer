@@ -17,6 +17,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import type { OpenApiSchema } from "../types";
 import { getSchemaSummary, getSchemaType } from "../schemaUtils";
 import { InlineSchemaEditor } from "../InlineSchemaEditor";
+import { useInlineSchemaLabels } from "../labels";
 
 export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
   name: string;
@@ -31,6 +32,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
   onChange: (schema: SchemaValue) => void;
   onRemove: () => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const [name, setName] = useState(props.name);
   const [error, setError] = useState("");
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -42,9 +44,9 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
 
   const validate = (next: string) => {
     const trimmed = next.trim();
-    if (!trimmed) return "Property name is required.";
+    if (!trimmed) return labels.propertyNameRequired;
     if (trimmed !== props.name && props.siblingNames.includes(trimmed)) {
-      return "Property name already exists.";
+      return labels.propertyNameExists;
     }
     return "";
   };
@@ -61,7 +63,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
     <Box className="pdDesignerSchemaNestedCard">
       <HStack align="start" gap="3" className="schemaPropertyRow">
         <Field.Root invalid={!!error} flex="1" minW="0">
-          <Field.Label>Property</Field.Label>
+          <Field.Label>{labels.property}</Field.Label>
           <Input
             size="sm"
             value={name}
@@ -93,7 +95,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
                 props.onRemove();
               }
             }}
-            placeholder="Property name"
+            placeholder={labels.propertyNamePlaceholder}
           />
           {error ? <Field.ErrorText>{error}</Field.ErrorText> : null}
           <Text fontSize="xs" color="var(--color-text-secondary)" mt="1">
@@ -112,7 +114,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
           >
             <Switch.HiddenInput />
             <Switch.Control />
-            <Switch.Label fontSize="xs">Required</Switch.Label>
+            <Switch.Label fontSize="xs">{labels.required}</Switch.Label>
           </Switch.Root>
         </Stack>
 
@@ -132,7 +134,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
                 ref={triggerRef}
                 size="xs"
                 variant="outline"
-                aria-label="Configure property"
+                aria-label={labels.configureProperty}
                 className="pdDesignerSchemaIconButton"
               >
                 <VscSettingsCompact size={16} />
@@ -158,7 +160,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
             pt="0"
             size="xs"
             variant="plain"
-            aria-label="Duplicate property"
+            aria-label={labels.duplicateProperty}
             className="pdDesignerSchemaIconButton"
             disabled={props.disabled}
             onClick={props.onDuplicate}
@@ -170,7 +172,7 @@ export const SchemaPropertyRow = memo(function SchemaPropertyRow(props: {
             pt="0"
             size="xs"
             variant="plain"
-            aria-label="Remove property"
+            aria-label={labels.removeProperty}
             className="pdDesignerSchemaIconButton"
             disabled={props.disabled}
             onClick={props.onRemove}

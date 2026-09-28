@@ -21,6 +21,11 @@ import {
   stringifySchemaValue,
 } from "../schemaUtils";
 import { SchemaValueEditor } from "./SchemaValueEditor";
+import {
+  fillLabel,
+  useInlineSchemaLabels,
+  type InlineSchemaEditorLabels,
+} from "../labels";
 
 function readRecord(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -28,17 +33,21 @@ function readRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function getValueError(type: InlineSchemaType, text: string): string {
+function getValueError(
+  type: InlineSchemaType,
+  text: string,
+  labels: InlineSchemaEditorLabels,
+): string {
   if (!text.trim()) return "";
   if (type === "boolean")
-    return text === "true" || text === "false" ? "" : "Pick true or false.";
+    return text === "true" || text === "false" ? "" : labels.validTrueFalse;
   if (type === "integer")
-    return Number.isInteger(Number(text)) ? "" : "Enter a valid integer.";
+    return Number.isInteger(Number(text)) ? "" : labels.validInteger;
   if (type === "number")
-    return Number.isFinite(Number(text)) ? "" : "Enter a valid number.";
-  if (type === "null") return text.trim() === "null" ? "" : 'Use "null".';
+    return Number.isFinite(Number(text)) ? "" : labels.validNumber;
+  if (type === "null") return text.trim() === "null" ? "" : labels.validUseNull;
   if (["array", "object"].includes(type))
-    return canParseSchemaValue(text, type) ? "" : "Enter valid JSON.";
+    return canParseSchemaValue(text, type) ? "" : labels.validJson;
   return "";
 }
 
@@ -47,6 +56,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
   disabled?: boolean;
   update: (patch: Partial<OpenApiSchema>) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const s = props.schema;
   const schemaType = getSchemaType(s);
   const examples = useMemo(
@@ -62,8 +72,8 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
   const [defaultDraft, setDefaultDraft] = useState(() =>
     stringifySchemaValue(s.default),
   );
-  const exampleError = getValueError(schemaType, exampleDraft);
-  const defaultError = getValueError(schemaType, defaultDraft);
+  const exampleError = getValueError(schemaType, exampleDraft, labels);
+  const defaultError = getValueError(schemaType, defaultDraft, labels);
 
   useEffect(() => {
     setExampleDrafts(examples.map((item) => stringifySchemaValue(item)));
@@ -85,12 +95,12 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
   return (
     <Stack gap="4" className="pdDesignerSchemaSection">
       <Text fontSize="sm" fontWeight="600">
-        Advanced options
+        {labels.advancedOptions}
       </Text>
 
       <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
         <Field.Root>
-          <Field.Label>Title</Field.Label>
+          <Field.Label>{labels.title}</Field.Label>
           <Input
             size="sm"
             value={typeof s.title === "string" ? s.title : ""}
@@ -101,7 +111,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Const</Field.Label>
+          <Field.Label>{labels.const}</Field.Label>
           <Input
             size="sm"
             value={
@@ -128,7 +138,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
       </Grid>
 
       <Field.Root>
-        <Field.Label>Description</Field.Label>
+        <Field.Label>{labels.description}</Field.Label>
         <Textarea
           size="sm"
           minH="80px"
@@ -142,14 +152,14 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
 
       <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
         <Field.Root>
-          <Field.Label>Example</Field.Label>
+          <Field.Label>{labels.example}</Field.Label>
           <SchemaValueEditor
             value={s.example}
             type={schemaType}
             disabled={props.disabled}
             placeholder={
               schemaType === "object" || schemaType === "array"
-                ? "Enter valid JSON"
+                ? labels.validJson
                 : undefined
             }
             error={exampleError}
@@ -158,7 +168,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Default</Field.Label>
+          <Field.Label>{labels.defaultValue}</Field.Label>
           <SchemaValueEditor
             value={s.default}
             type={schemaType}
@@ -173,7 +183,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
       <Stack gap="3">
         <HStack justify="space-between" align="center">
           <Text fontSize="sm" fontWeight="600">
-            Examples
+            {labels.examples}
           </Text>
           <Button
             size="xs"
@@ -199,19 +209,19 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
               );
             }}
           >
-            Add example
+            {labels.addExample}
           </Button>
         </HStack>
 
         {examples.length === 0 ? (
           <Text fontSize="xs" color="var(--color-text-secondary)">
-            No examples.
+            {labels.noExamples}
           </Text>
         ) : null}
 
         {examples.map((value, index) => {
           const text = exampleDrafts[index] ?? stringifySchemaValue(value);
-          const error = getValueError(schemaType, text);
+          const error = getValueError(schemaType, text, labels);
           return (
             <Box
               key={index}
@@ -222,7 +232,9 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
             >
               <HStack align="start" gap="2">
                 <Field.Root invalid={!!error} flex="1">
-                  <Field.Label>Example {index + 1}</Field.Label>
+                  <Field.Label>
+                    {fillLabel(labels.exampleN, { index: index + 1 })}
+                  </Field.Label>
                   <Input
                     size="sm"
                     value={text}
@@ -247,7 +259,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
                   mt="6"
                   size="xs"
                   variant="plain"
-                  aria-label="Remove example"
+                  aria-label={labels.removeExample}
                   disabled={props.disabled}
                   onClick={() => {
                     const next = [...examples];
@@ -268,14 +280,14 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
       <Collapsible.Root defaultOpen={false}>
         <Collapsible.Trigger asChild>
           <Button size="xs" variant="ghost" alignSelf="flex-start">
-            Show less common options
+            {labels.showLessCommonOptions}
           </Button>
         </Collapsible.Trigger>
         <Collapsible.Content>
           <Stack gap="4" pt="3">
             <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
               <Field.Root>
-                <Field.Label>Content encoding</Field.Label>
+                <Field.Label>{labels.contentEncoding}</Field.Label>
                 <Input
                   size="sm"
                   value={
@@ -292,7 +304,7 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
                 />
               </Field.Root>
               <Field.Root>
-                <Field.Label>Content media type</Field.Label>
+                <Field.Label>{labels.contentMediaType}</Field.Label>
                 <Input
                   size="sm"
                   value={
@@ -319,11 +331,11 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
             >
               <Switch.HiddenInput />
               <Switch.Control />
-              <Switch.Label>Deprecated</Switch.Label>
+              <Switch.Label>{labels.deprecated}</Switch.Label>
             </Switch.Root>
 
             <Field.Root>
-              <Field.Label>Write only</Field.Label>
+              <Field.Label>{labels.writeOnly}</Field.Label>
               <Switch.Root
                 checked={s.writeOnly === true}
                 disabled={props.disabled}
@@ -333,12 +345,12 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
               >
                 <Switch.HiddenInput />
                 <Switch.Control />
-                <Switch.Label>Hidden from responses</Switch.Label>
+                <Switch.Label>{labels.hiddenFromResponses}</Switch.Label>
               </Switch.Root>
             </Field.Root>
 
             <Field.Root>
-              <Field.Label>Read only</Field.Label>
+              <Field.Label>{labels.readOnly}</Field.Label>
               <Switch.Root
                 checked={s.readOnly === true}
                 disabled={props.disabled}
@@ -348,12 +360,12 @@ export const SchemaAdvancedEditor = memo(function SchemaAdvancedEditor(props: {
               >
                 <Switch.HiddenInput />
                 <Switch.Control />
-                <Switch.Label>Hidden from requests</Switch.Label>
+                <Switch.Label>{labels.hiddenFromRequests}</Switch.Label>
               </Switch.Root>
             </Field.Root>
 
             <Field.Root>
-              <Field.Label>External docs URL</Field.Label>
+              <Field.Label>{labels.externalDocsUrl}</Field.Label>
               <Input
                 size="sm"
                 value={

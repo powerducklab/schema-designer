@@ -22,6 +22,7 @@ import {
 } from "../schemaUtils";
 import { SchemaPropertyList } from "../components/SchemaPropertyList";
 import { InlineSchemaEditor } from "../InlineSchemaEditor";
+import { useInlineSchemaLabels } from "../labels";
 
 export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
   schema: OpenApiSchema;
@@ -29,6 +30,7 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
   disabled?: boolean;
   onChange: (schema: OpenApiSchema) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const mode =
@@ -75,7 +77,7 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
 
       <Stack gap="2" className="pdDesignerSchemaSection">
         <Text fontSize="sm" fontWeight="700">
-          Additional properties
+          {labels.additionalProperties}
         </Text>
 
         <Field.Root>
@@ -95,9 +97,9 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
                 } as OpenApiSchema);
               }}
             >
-              <option value="allow">Allow any property</option>
-              <option value="deny">Disallow extra properties</option>
-              <option value="schema">Validate with schema</option>
+              <option value="allow">{labels.allowAnyProperty}</option>
+              <option value="deny">{labels.disallowExtraProperties}</option>
+              <option value="schema">{labels.validateWithSchema}</option>
             </NativeSelect.Field>
             <NativeSelect.Indicator />
           </NativeSelect.Root>
@@ -108,7 +110,7 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
             <HStack justify="space-between" align="center" gap="3">
               <Box flex="1" minW="0">
                 <Text fontSize="sm" fontWeight="600">
-                  Additional property schema
+                  {labels.additionalPropertySchema}
                 </Text>
                 <Text
                   fontSize="xs"
@@ -136,7 +138,7 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
                     ref={triggerRef}
                     size="xs"
                     variant="outline"
-                    aria-label="Configure additional property schema"
+                    aria-label={labels.configureAdditionalPropertySchema}
                     className="pdDesignerSchemaIconButton"
                   >
                     <VscSettingsCompact size={16} />
@@ -144,7 +146,7 @@ export const ObjectSchemaEditor = memo(function ObjectSchemaEditor(props: {
                 </Popover.Trigger>
                 <Portal>
                   <Popover.Positioner>
-                    <SettingsPanel title={"Additional properties"}>
+                    <SettingsPanel title={labels.additionalPropertiesPanelTitle}>
                       <InlineSchemaEditor
                         schema={additional}
                         fullSchema={props.fullSchema}

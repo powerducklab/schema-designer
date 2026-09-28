@@ -2,6 +2,7 @@ import { Field, HStack, Input, Stack, Switch, VStack } from "@chakra-ui/react";
 import { memo } from "react";
 import type { InlineSchemaType } from "../types";
 import { SchemaTypeSelector } from "./SchemaTypeSelector";
+import { useInlineSchemaLabels } from "../labels";
 
 export const SchemaHeader = memo(function SchemaHeader(props: {
   name?: string;
@@ -15,6 +16,7 @@ export const SchemaHeader = memo(function SchemaHeader(props: {
   onNameChange?: (value: string) => void;
   onDescriptionChange?: (value: string) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   return (
     <Stack gap="2" className="pdDesignerSchemaSection">
       <HStack justify="space-between" gap="2" align="start" flexWrap="wrap">
@@ -22,12 +24,12 @@ export const SchemaHeader = memo(function SchemaHeader(props: {
           <VStack flex="1">
             {!props.hideName ? (
               <Field.Root>
-                <Field.Label>Field name</Field.Label>
+                <Field.Label>{labels.fieldName}</Field.Label>
                 <Input
                   size="sm"
                   value={props.name ?? ""}
                   disabled={props.disabled}
-                  placeholder="customerEmail"
+                  placeholder={labels.fieldNamePlaceholder}
                   onChange={(e) => props.onNameChange?.(e.target.value)}
                 />
               </Field.Root>
@@ -37,7 +39,7 @@ export const SchemaHeader = memo(function SchemaHeader(props: {
 
         <HStack gap="4" flexShrink={0} align="end">
           <Field.Root>
-            <Field.Label>Type</Field.Label>
+            <Field.Label>{labels.type}</Field.Label>
             <SchemaTypeSelector
               value={props.type}
               disabled={props.disabled}
@@ -53,7 +55,7 @@ export const SchemaHeader = memo(function SchemaHeader(props: {
               >
                 <Switch.HiddenInput />
                 <Switch.Control />
-                <Switch.Label>Required</Switch.Label>
+                <Switch.Label>{labels.required}</Switch.Label>
               </Switch.Root>
             ) : null}
           </HStack>
@@ -61,12 +63,12 @@ export const SchemaHeader = memo(function SchemaHeader(props: {
       </HStack>
 
       <Field.Root>
-        <Field.Label>Description</Field.Label>
+        <Field.Label>{labels.description}</Field.Label>
         <Input
           size="sm"
           value={props.description ?? ""}
           disabled={props.disabled}
-          placeholder="Helpful summary for API consumers"
+          placeholder={labels.descriptionPlaceholder}
           onChange={(e) => props.onDescriptionChange?.(e.target.value)}
         />
       </Field.Root>

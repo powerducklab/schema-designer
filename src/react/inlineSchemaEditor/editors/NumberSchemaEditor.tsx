@@ -13,6 +13,7 @@ import {
   parseOptionalNumber,
   toInputValue,
 } from "../schemaUtils";
+import { useInlineSchemaLabels } from "../labels";
 
 export function NumberSchemaEditor(props: {
   schema: OpenApiSchema;
@@ -20,10 +21,11 @@ export function NumberSchemaEditor(props: {
   formatOptions?: SchemaFormatOptions;
   update: (patch: Partial<OpenApiSchema>) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const formats = normalizeFormatOptions(props.formatOptions);
   const collection = createListCollection({
     items: [
-      { value: "", label: "None" },
+      { value: "", label: labels.none },
       ...formats.map((value) => ({ value, label: value })),
     ],
   });
@@ -36,7 +38,7 @@ export function NumberSchemaEditor(props: {
     <Stack gap="3">
       <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
         <Field.Root>
-          <Field.Label>Format</Field.Label>
+          <Field.Label>{labels.format}</Field.Label>
           <Select.Root
             collection={collection}
             size="sm"
@@ -53,7 +55,7 @@ export function NumberSchemaEditor(props: {
             <Select.HiddenSelect />
             <Select.Control>
               <Select.Trigger>
-                <Select.ValueText placeholder="None" />
+                <Select.ValueText placeholder={labels.none} />
               </Select.Trigger>
               <Select.IndicatorGroup>
                 <Select.Indicator />
@@ -74,7 +76,7 @@ export function NumberSchemaEditor(props: {
           </Select.Root>
         </Field.Root>
         <Field.Root>
-          <Field.Label>Multiple of</Field.Label>
+          <Field.Label>{labels.multipleOf}</Field.Label>
           <Input
             size="sm"
             type="number"
@@ -84,7 +86,7 @@ export function NumberSchemaEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Minimum</Field.Label>
+          <Field.Label>{labels.minimum}</Field.Label>
           <Input
             size="sm"
             type="number"
@@ -94,7 +96,7 @@ export function NumberSchemaEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Maximum</Field.Label>
+          <Field.Label>{labels.maximum}</Field.Label>
           <Input
             size="sm"
             type="number"
@@ -104,7 +106,7 @@ export function NumberSchemaEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Exclusive minimum</Field.Label>
+          <Field.Label>{labels.exclusiveMinimum}</Field.Label>
           <Input
             size="sm"
             type="number"
@@ -114,7 +116,7 @@ export function NumberSchemaEditor(props: {
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>Exclusive maximum</Field.Label>
+          <Field.Label>{labels.exclusiveMaximum}</Field.Label>
           <Input
             size="sm"
             type="number"

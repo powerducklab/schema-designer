@@ -1,9 +1,11 @@
 import { Text } from "@chakra-ui/react";
+import { useInlineSchemaLabels } from "../labels";
+
 export function BooleanSchemaEditor() {
+  const labels = useInlineSchemaLabels();
   return (
     <Text fontSize="sm" color="var(--color-text-secondary)">
-      Boolean schemas do not expose type-specific constraints in this compact
-      editor.
+      {labels.booleanConstraintsNote}
     </Text>
   );
 }

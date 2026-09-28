@@ -24,6 +24,10 @@ import { ArraySchemaEditor } from "./editors/ArraySchemaEditor";
 import { ObjectSchemaEditor } from "./editors/ObjectSchemaEditor";
 import { BooleanSchemaEditor } from "./editors/BooleanSchemaEditor";
 import styles from "./InlineSchemaEditor.module.css";
+import {
+  InlineSchemaLabelsProvider,
+  useInlineSchemaLabels,
+} from "./labels";
 
 const STRING_FORMATS = [
   "date",
@@ -49,6 +53,15 @@ const NUMBER_FORMATS = ["float", "double"] as const;
 const INTEGER_FORMATS = ["int32", "int64"] as const;
 
 export function InlineSchemaEditor(props: InlineSchemaEditorProps) {
+  return (
+    <InlineSchemaLabelsProvider labels={props.labels}>
+      <InlineSchemaEditorInner {...props} />
+    </InlineSchemaLabelsProvider>
+  );
+}
+
+function InlineSchemaEditorInner(props: InlineSchemaEditorProps) {
+  const labels = useInlineSchemaLabels();
   const current = props.value !== undefined ? props.value : props.schema;
   const update = (patch: Partial<OpenApiSchema>) => {
     if (props.disabled) return;
@@ -62,9 +75,9 @@ export function InlineSchemaEditor(props: InlineSchemaEditorProps) {
       <Box className={styles.root}>
         <Stack gap="3">
           <Text fontWeight="600">
-            {current ? "Any value is allowed" : "No values are allowed"}
+            {current ? labels.anyValueAllowed : labels.noValuesAllowed}
           </Text>
-          <Text fontSize="sm">This is a boolean JSON Schema.</Text>
+          <Text fontSize="sm">{labels.booleanSchemaNote}</Text>
           {props.onRequiredChange && (
             <Switch.Root
               checked={!!props.required}
@@ -75,7 +88,7 @@ export function InlineSchemaEditor(props: InlineSchemaEditorProps) {
             >
               <Switch.HiddenInput />
               <Switch.Control />
-              <Switch.Label>Required</Switch.Label>
+              <Switch.Label>{labels.required}</Switch.Label>
             </Switch.Root>
           )}
           <Button
@@ -83,7 +96,7 @@ export function InlineSchemaEditor(props: InlineSchemaEditorProps) {
             disabled={props.disabled || !props.onChange}
             onClick={() => props.onChange?.(!current)}
           >
-            {current ? "Disallow all values" : "Allow all values"}
+            {current ? labels.disallowAllValues : labels.allowAllValues}
           </Button>
           <Button
             size="sm"
@@ -91,7 +104,7 @@ export function InlineSchemaEditor(props: InlineSchemaEditorProps) {
             disabled={props.disabled}
             onClick={() => update({})}
           >
-            Configure constraints
+            {labels.configureConstraints}
           </Button>
         </Stack>
       </Box>
@@ -107,6 +120,7 @@ function ObjectSchemaEditorView(
 ) {
   const { schema, type } = useSchemaEditor(props.schema, props.schemaType);
   const { patch, replace } = useSchemaPatch(props.schema, props.update);
+  const labels = useInlineSchemaLabels();
   const record = toSchemaRecord(schema);
   const isRefMode = typeof record.$ref === "string" && record.$ref.length > 0;
 
@@ -168,7 +182,7 @@ function ObjectSchemaEditorView(
       />
 
       <details className={styles.reference} open={isRefMode || undefined}>
-        <summary>Reference{isRefMode ? " linked" : " (optional)"}</summary>
+        <summary>{isRefMode ? labels.referenceLinked : labels.referenceOptional}</summary>
         <SchemaReferenceEditor
           schema={schema}
           fullSchema={props.fullSchema}
@@ -187,10 +201,10 @@ function ObjectSchemaEditorView(
           unmountOnExit
         >
           <Tabs.List className={styles.tabsList}>
-            <Tabs.Trigger value="core">Core</Tabs.Trigger>
-            <Tabs.Trigger value="validation">Validation</Tabs.Trigger>
+            <Tabs.Trigger value="core">{labels.tabCore}</Tabs.Trigger>
+            <Tabs.Trigger value="validation">{labels.tabValidation}</Tabs.Trigger>
             {props.showAdvanced !== false && (
-              <Tabs.Trigger value="advanced">Advanced</Tabs.Trigger>
+              <Tabs.Trigger value="advanced">{labels.tabAdvanced}</Tabs.Trigger>
             )}
           </Tabs.List>
 
@@ -244,7 +258,7 @@ function ObjectSchemaEditorView(
               ) : null}
               {props.showComposition !== false && (
                 <details className={styles.reference}>
-                  <summary>Composition rules (allOf / anyOf / oneOf)</summary>
+                  <summary>{labels.compositionRules}</summary>
                   <SchemaCompositionEditor
                     schema={schema}
                     fullSchema={props.fullSchema}

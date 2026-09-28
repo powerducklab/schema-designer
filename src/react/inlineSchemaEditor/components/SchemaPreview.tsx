@@ -2,12 +2,13 @@ import { Box, Button, HStack, Portal, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { OpenApiSchema } from "../types";
 import { diffSchemaLines } from "../schemaUtils";
+import { useInlineSchemaLabels } from "../labels";
 
-function previewText(schema: OpenApiSchema): string {
+function previewText(schema: OpenApiSchema, fallback: string): string {
   try {
     return JSON.stringify(schema, null, 2);
   } catch {
-    return "Schema preview unavailable: input contains a cyclic or non-JSON value.";
+    return fallback;
   }
 }
 
@@ -15,14 +16,18 @@ export function SchemaPreview(props: {
   schema: OpenApiSchema;
   path?: string[];
 }) {
+  const labels = useInlineSchemaLabels();
   const [copied, setCopied] = useState(false);
   const [baselineText, setBaselineText] = useState(() =>
-    previewText(props.schema),
+    previewText(props.schema, labels.previewUnavailable),
   );
   const [lastStableText, setLastStableText] = useState(() =>
-    previewText(props.schema),
+    previewText(props.schema, labels.previewUnavailable),
   );
-  const currentText = useMemo(() => previewText(props.schema), [props.schema]);
+  const currentText = useMemo(
+    () => previewText(props.schema, labels.previewUnavailable),
+    [props.schema, labels.previewUnavailable],
+  );
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -47,7 +52,7 @@ export function SchemaPreview(props: {
     [baselineText, currentText],
   );
   const pathText = (
-    props.path?.length ? props.path.join(" / ") : "root"
+    props.path?.length ? props.path.join(" / ") : labels.previewRoot
   ).replace(/\./g, " / ");
 
   return (
@@ -59,7 +64,7 @@ export function SchemaPreview(props: {
             fontWeight="700"
             color="var(--color-text-primary)"
           >
-            Generated schema
+            {labels.generatedSchema}
           </Text>
           <Text
             fontSize="xs"
@@ -85,7 +90,7 @@ export function SchemaPreview(props: {
             }
           }}
         >
-          {copied ? "Copied" : "Copy"}
+          {copied ? labels.copied : labels.copy}
         </Button>
       </HStack>
 
@@ -143,7 +148,7 @@ export function SchemaPreview(props: {
             px="3"
             py="2"
           >
-            Copied schema JSON
+            {labels.copiedSchemaJson}
           </Box>
         </Portal>
       ) : null}

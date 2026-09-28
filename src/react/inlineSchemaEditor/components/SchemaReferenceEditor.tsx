@@ -1,6 +1,7 @@
 import { Button, Field, HStack, NativeSelect, Stack } from "@chakra-ui/react";
 import type { OpenApiSchema } from "../types";
 import { getReferenceOptions, toSchemaRecord } from "../schemaUtils";
+import { useInlineSchemaLabels } from "../labels";
 
 export function SchemaReferenceEditor(props: {
   schema: OpenApiSchema;
@@ -11,6 +12,7 @@ export function SchemaReferenceEditor(props: {
   onClearReference?: () => void;
   update: (patch: Partial<OpenApiSchema>) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const record = toSchemaRecord(props.schema);
   const ref = typeof record.$ref === "string" ? record.$ref : "";
   const options = getReferenceOptions(props.fullSchema);
@@ -27,7 +29,7 @@ export function SchemaReferenceEditor(props: {
               onClick={props.onClearReference}
               disabled={props.disabled}
             >
-              Use inline schema
+              {labels.useInlineSchema}
             </Button>
           ) : null}
           {props.hasDraft && !ref ? (
@@ -37,7 +39,7 @@ export function SchemaReferenceEditor(props: {
               onClick={props.onRestoreDraft}
               disabled={props.disabled}
             >
-              Restore draft
+              {labels.restoreDraft}
             </Button>
           ) : null}
         </HStack>
@@ -53,7 +55,7 @@ export function SchemaReferenceEditor(props: {
               props.update({ $ref: value || undefined });
             }}
           >
-            <option value="">No reference</option>
+            <option value="">{labels.noReference}</option>
             {options.map((value) => (
               <option key={value} value={value}>
                 {value}

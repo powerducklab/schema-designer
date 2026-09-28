@@ -13,6 +13,7 @@ import {
   parseSchemaValue,
   stringifySchemaValue,
 } from "../schemaUtils";
+import { useInlineSchemaLabels } from "../labels";
 
 export function SchemaValueEditor(props: {
   value: unknown;
@@ -23,6 +24,7 @@ export function SchemaValueEditor(props: {
   onChange: (value: unknown) => void;
   onTextChange?: (value: string) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const externalText = stringifySchemaValue(props.value);
   const [draft, setDraft] = useState(externalText);
   useEffect(() => {
@@ -32,12 +34,12 @@ export function SchemaValueEditor(props: {
     () =>
       createListCollection({
         items: [
-          { label: "Unset", value: "" },
-          { label: "True", value: "true" },
-          { label: "False", value: "false" },
+          { label: labels.unset, value: "" },
+          { label: labels.true, value: "true" },
+          { label: labels.false, value: "false" },
         ],
       }),
-    [],
+    [labels.unset, labels.true, labels.false],
   );
 
   const change = (text: string) => {
@@ -61,7 +63,7 @@ export function SchemaValueEditor(props: {
           <Select.HiddenSelect />
           <Select.Control>
             <Select.Trigger>
-              <Select.ValueText placeholder="Unset" />
+              <Select.ValueText placeholder={labels.unset} />
             </Select.Trigger>
             <Select.IndicatorGroup>
               <Select.Indicator />

@@ -21,6 +21,7 @@ import {
   setComposition,
 } from "../schemaUtils";
 import { InlineSchemaEditor } from "../InlineSchemaEditor";
+import { fillLabel, useInlineSchemaLabels } from "../labels";
 
 const KEYS: CompositionKey[] = ["allOf", "anyOf", "oneOf"];
 
@@ -31,6 +32,7 @@ const CompositionList = memo(function CompositionList(props: {
   disabled?: boolean;
   onChange: (schema: OpenApiSchema) => void;
 }) {
+  const labels = useInlineSchemaLabels();
   const { schema, fullSchema, keyName, disabled, onChange } = props;
   const values = getComposition(schema, keyName);
 
@@ -51,12 +53,12 @@ const CompositionList = memo(function CompositionList(props: {
           ])
         }
       >
-        Add {keyName} item
+        {fillLabel(labels.addCompositionItem, { key: keyName })}
       </Button>
 
       {values.length === 0 ? (
         <Text fontSize="xs" color="var(--color-text-secondary)">
-          No {keyName} rules.
+          {fillLabel(labels.noCompositionRules, { key: keyName })}
         </Text>
       ) : null}
 
@@ -90,7 +92,10 @@ const CompositionList = memo(function CompositionList(props: {
                     <IconButton
                       size="xs"
                       variant="outline"
-                      aria-label={`Configure ${keyName} item ${index + 1}`}
+                      aria-label={fillLabel(
+                        labels.configureCompositionItem,
+                        { key: keyName, index: index + 1 },
+                      )}
                       className="pdDesignerSchemaIconButton"
                     >
                       <VscSettingsCompact size={16} />
@@ -119,7 +124,10 @@ const CompositionList = memo(function CompositionList(props: {
                 <IconButton
                   size="xs"
                   variant="plain"
-                  aria-label={`Remove ${keyName} item ${index + 1}`}
+                  aria-label={fillLabel(labels.removeCompositionItem, {
+                    key: keyName,
+                    index: index + 1,
+                  })}
                   className="pdDesignerSchemaIconButton"
                   disabled={disabled}
                   onClick={() =>

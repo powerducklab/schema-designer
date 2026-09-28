@@ -1,4 +1,5 @@
 import type { SchemaValue } from "../../core/types";
+import type { InlineSchemaEditorLabels } from "./labels";
 export type InlineSchemaType =
   | "string"
   | "number"
@@ -38,6 +39,8 @@ export interface InlineSchemaEditorProps {
   onExampleChange?: (value: unknown) => void;
   onDefaultChange?: (value: unknown) => void;
   onNameChange?: (name: string) => void;
+  /** Localized labels for every visible string in the editor. */
+  labels?: InlineSchemaEditorLabels;
 }
 
 export interface SchemaPropertyItem {

@@ -6,6 +6,11 @@ export {
 } from "./parametersTable/ParametersTable";
 export type { SchemaDesignerTreeProps as SchemaTreeEditorProps } from "./schemaTreeEditor/libs/types";
 export type { InlineSchemaEditorProps } from "./inlineSchemaEditor/types";
+export type { InlineSchemaEditorLabels } from "./inlineSchemaEditor/labels";
+export {
+  InlineSchemaLabelsProvider,
+  DEFAULT_INLINE_SCHEMA_LABELS,
+} from "./inlineSchemaEditor/labels";
 export type {
   ParameterTableProps,
   OpenApiParameter,
