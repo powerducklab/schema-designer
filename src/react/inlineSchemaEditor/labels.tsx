@@ -19,6 +19,7 @@ export interface InlineSchemaEditorLabels {
   configure: string;
   removeItem: string;
   configureItem: string;
+  closeSettings: string;
 
   // Boolean-schema (schema: true / false) state
   anyValueAllowed: string;
@@ -172,6 +173,7 @@ export const DEFAULT_INLINE_SCHEMA_LABELS: InlineSchemaEditorLabels = {
   configure: "Configure",
   removeItem: "Remove {{name}}",
   configureItem: "Configure {{name}}",
+  closeSettings: "Close settings",
 
   anyValueAllowed: "Any value is allowed",
   noValuesAllowed: "No values are allowed",
