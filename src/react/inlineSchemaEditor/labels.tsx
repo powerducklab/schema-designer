@@ -313,7 +313,11 @@ export function InlineSchemaLabelsProvider(props: {
   labels?: InlineSchemaEditorLabels;
   children: ReactNode;
 }) {
-  const value = props.labels ?? DEFAULT_INLINE_SCHEMA_LABELS;
+  // Explicit labels win. With no labels prop the provider stays transparent and
+  // inherits the nearest parent provider, so a label-less nested editor cannot
+  // reset a localized provider mounted above it.
+  const parent = useContext(InlineSchemaLabelsContext);
+  const value = props.labels ?? parent;
   return (
     <InlineSchemaLabelsContext.Provider value={value}>
       {props.children}
