@@ -364,6 +364,14 @@ export const ParameterTable = memo(function ParameterTable(
   };
   const editValue = (rowId: string, value: unknown) => {
     if (readOnly) return;
+    if (props.mode === "design") {
+      commitRows(rowsRef.current.map(row => {
+        if (row.id !== rowId) return row;
+        const {examples, ...parameter} = row.parameter;
+        return {...row, parameter: {...parameter, example: value}, generatedValue: value};
+      }));
+      return;
+    }
     const next = rowsRef.current.map((row) =>
       row.id === rowId ? { ...row, generatedValue: value } : row,
     );
@@ -546,9 +554,17 @@ export const ParameterTable = memo(function ParameterTable(
         .map((row) => row.id),
     );
     if (!changedIds.size) return;
-    rowsRef.current = next;
-    setRows(next);
-    writeValues(next, changedIds);
+    if (props.mode === "design") {
+      commitRows(next.map(row => {
+        if (!changedIds.has(row.id)) return row;
+        const {examples, ...parameter} = row.parameter;
+        return {...row, parameter: {...parameter, example: row.generatedValue}};
+      }));
+    } else {
+      rowsRef.current = next;
+      setRows(next);
+      writeValues(next, changedIds);
+    }
   }, [
     faker,
     generateValue,
@@ -557,6 +573,8 @@ export const ParameterTable = memo(function ParameterTable(
     props.onError,
     props.document,
     labels.generationFailed,
+    props.mode,
+    commitRows,
   ]);
 
   const onDragEnd = useCallback(
@@ -875,6 +893,7 @@ export const ParameterTable = memo(function ParameterTable(
       <Box
         className={`${styles.root} ${className ?? ""}`}
         data-sticky-header={stickyHeader}
+        data-auto-height={height === "auto" || undefined}
         style={{ height }}
       >
         {generationError && (
@@ -899,7 +918,8 @@ export const ParameterTable = memo(function ParameterTable(
     <Box
       className={`${styles.root} ${className ?? ""}`}
       data-sticky-header={stickyHeader}
-      style={{ height }}
+      data-auto-height={height === "auto" || undefined}
+        style={{ height }}
     >
       {generationError && (
         <Text role="alert" fontSize="sm" p="2" color="var(--color-danger)">
@@ -1084,7 +1104,7 @@ export const ParameterTable = memo(function ParameterTable(
                       const parameter = row.parameter;
 
                       const displayValue =
-                        props.values !== undefined
+                        props.mode === "design" || props.values !== undefined
                           ? resolveParameterValue(parameter, props.document)
                           : getDisplayValue(row, props.document);
 
@@ -1186,7 +1206,7 @@ export const ParameterTable = memo(function ParameterTable(
                                             }
                                             allowLineBreaks={false}
                                             submitOnEnter={true}
-                                            expansionMode="overlay"
+                                            expansionMode={props.mode === "design" ? "inline" : "overlay"}
                                             minHeight={28}
                                             safePadding={4}
                                             maxFocusedHeight={360}
@@ -1292,7 +1312,7 @@ export const ParameterTable = memo(function ParameterTable(
                                             )}
                                             readOnly={readOnly}
                                             value={parameterValueText(
-                                              Object.hasOwn(
+                                              props.mode !== "design" && Object.hasOwn(
                                                 effectiveValues,
                                                 parameterKey(parameter),
                                               )
@@ -1307,7 +1327,7 @@ export const ParameterTable = memo(function ParameterTable(
                                               props.variables ?? EMPTY_VARIABLES
                                             }
                                             allowLineBreaks={true}
-                                            expansionMode="overlay"
+                                            expansionMode={props.mode === "design" ? "inline" : "overlay"}
                                             minHeight={28}
                                             safePadding={4}
                                             maxFocusedHeight={360}

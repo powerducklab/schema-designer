@@ -1,3 +1,4 @@
+import { VscChevronRight } from "react-icons/vsc";
 import { Box, Button, Stack, Switch, Tabs, Text } from "@chakra-ui/react";
 import { useCallback, useMemo } from "react";
 import type {
@@ -182,7 +183,7 @@ function ObjectSchemaEditorView(
       />
 
       <details className={styles.reference} open={isRefMode || undefined}>
-        <summary>{isRefMode ? labels.referenceLinked : labels.referenceOptional}</summary>
+        <summary><VscChevronRight aria-hidden="true" />{isRefMode ? labels.referenceLinked : labels.referenceOptional}</summary>
         <SchemaReferenceEditor
           schema={schema}
           fullSchema={props.fullSchema}
@@ -258,7 +259,7 @@ function ObjectSchemaEditorView(
               ) : null}
               {props.showComposition !== false && (
                 <details className={styles.reference}>
-                  <summary>{labels.compositionRules}</summary>
+                  <summary><VscChevronRight aria-hidden="true" />{labels.compositionRules}</summary>
                   <SchemaCompositionEditor
                     schema={schema}
                     fullSchema={props.fullSchema}

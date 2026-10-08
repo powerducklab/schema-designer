@@ -704,3 +704,8 @@
   outline: 2px solid var(--color-focus-ring, #f5c98f);
   outline-offset: -2px;
 }
+
+/* An auto-height table participates in the host scroller. Do not shrink a
+ * wrapped editor into an independent, clipped nested viewport. */
+.root[data-auto-height] { flex: none; overflow: visible; }
+.root[data-auto-height] .tableViewport { flex: none; overflow: visible; }

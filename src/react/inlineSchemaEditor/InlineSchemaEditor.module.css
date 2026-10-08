@@ -211,3 +211,8 @@
 .root :global([data-scope="tabs"][data-part="indicator"]) {
   display: none;
 }
+
+.reference > summary { display: flex; align-items: center; gap: 6px; list-style: none; }
+.reference > summary::-webkit-details-marker { display: none; }
+.reference > summary > svg { flex-shrink: 0; }
+.reference[open] > summary > svg { transform: rotate(90deg); }

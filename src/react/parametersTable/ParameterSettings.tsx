@@ -1,3 +1,4 @@
+import { VscChevronRight } from "react-icons/vsc";
 import { VscSettingsCompact } from "react-icons/vsc";
 import { SettingsPanel } from "../shared/SettingsPanel";
 import tableStyles from "./ParametersTable.module.css";
@@ -133,7 +134,7 @@ export function ParameterSettings({
                       />
                     </Field.Root>
                     <details className={inlineStyles.reference}>
-                      <summary>{l.serialization}</summary>
+                      <summary><VscChevronRight aria-hidden="true" />{l.serialization}</summary>
                       <Stack gap="2" pt="2">
                         <Field.Root>
                           <Field.Label>{l.serializationStyle}</Field.Label>

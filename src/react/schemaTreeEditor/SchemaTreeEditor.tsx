@@ -1,3 +1,4 @@
+import {TreeLabelsContext,defaultTreeLabels,treeLabel} from "./labels";
 import { VscSettingsCompact } from "react-icons/vsc";
 import { SettingsPanel } from "../shared/SettingsPanel";
 import type { SchemaValue } from "../../core/types";
@@ -336,6 +337,7 @@ const schemaTypeOptions = createListCollection({
 });
 const SchemaRow: React.FC<RowProps> = React.memo(
   ({ node, index, handlers }) => {
+    const labels = React.useContext(TreeLabelsContext);
     const [armed, setArmed] = React.useState(false);
     const [draggable, setDraggable] = React.useState(false);
     const confirmTimer = React.useRef<number | null>(null);
@@ -441,8 +443,8 @@ const SchemaRow: React.FC<RowProps> = React.memo(
           {node.sortable && rowEditable ? (
             <Box
               className={styles.grip}
-              aria-label={`Reorder ${node.key}`}
-              title="Drag to reorder, or Ctrl/Cmd with the arrow keys"
+              aria-label={treeLabel(labels.reorder,{name:node.key})}
+              title={labels.dragHint}
               role="button"
               tabIndex={-1}
               onMouseDown={() => setDraggable(true)}
@@ -460,7 +462,7 @@ const SchemaRow: React.FC<RowProps> = React.memo(
               data-expanded={node.expanded || undefined}
               aria-expanded={node.expanded}
               aria-label={
-                node.expanded ? `Collapse ${node.key}` : `Expand ${node.key}`
+                treeLabel(node.expanded ? labels.collapseField : labels.expandField,{name:node.key})
               }
               onClick={() => handlers.onToggle(node)}
               size="xs"
@@ -475,17 +477,17 @@ const SchemaRow: React.FC<RowProps> = React.memo(
           <BufferedInput
             className={styles.nameInput}
             value={node.key}
-            ariaLabel="Field name"
+            ariaLabel={labels.fieldName}
             placeholder="fieldName"
             disabled={!rowEditable || node.kind !== "property"}
-            invalidHint="Name is invalid or already used"
+            invalidHint={labels.invalidName}
             onCommit={(next) => handlers.onRename(node, next)}
           />
 
           {node.refName ? (
             <Box
               className={styles.refBadge}
-              title={`Reference: ${node.refName}`}
+              title={treeLabel(labels.reference,{name:node.refName})}
             >
               <LuLink2 className={styles.refBadgeIcon} strokeWidth={1.5} />
               <Text className={styles.refBadgeText}>{node.refName}</Text>
@@ -495,9 +497,9 @@ const SchemaRow: React.FC<RowProps> = React.memo(
           {node.recursive ? (
             <Box
               className={styles.recursiveBadge}
-              title="Recursive reference, expansion stopped"
+              title={labels.recursive}
             >
-              <Text className={styles.recursiveBadgeText}>recursive</Text>
+              <Text className={styles.recursiveBadgeText}>{labels.recursive}</Text>
             </Box>
           ) : null}
         </Box>
@@ -505,7 +507,7 @@ const SchemaRow: React.FC<RowProps> = React.memo(
         <Box role="cell" className={styles.typeCell}>
           {typeof node.resolvedValue === "boolean" ? (
             <Text className={styles.typeStatic}>
-              {node.resolvedValue ? "Any value" : "Never"}
+              {node.resolvedValue ? labels.any : labels.never}
             </Text>
           ) : rowEditable ? (
             <Select.Root
@@ -530,7 +532,7 @@ const SchemaRow: React.FC<RowProps> = React.memo(
                 <Select.Trigger className={`${styles.typeSelectItem}`}>
                   <Select.ValueText
                     className={`${styles.typeSelectOption}`}
-                    placeholder="Select a schema type"
+                    placeholder={labels.selectType}
                   />
                 </Select.Trigger>
                 <Select.IndicatorGroup>
@@ -542,7 +544,7 @@ const SchemaRow: React.FC<RowProps> = React.memo(
                   <Select.Content className={styles.typeSelectContent}>
                     {schemaTypeOptions.items.map((item) => (
                       <Select.Item
-                        aria-label="Field type"
+                        aria-label={labels.type}
                         item={item}
                         key={item.value}
                       >
@@ -570,10 +572,10 @@ const SchemaRow: React.FC<RowProps> = React.memo(
             aria-pressed={node.required}
             aria-label={
               node.required
-                ? "Required, click to make optional"
-                : "Optional, click to make required"
+                ? labels.makeOptional
+                : labels.makeRequired
             }
-            title={node.required ? "Required" : "Optional"}
+            title={node.required ? labels.required : labels.optional}
             disabled={!rowEditable || node.kind !== "property"}
             onClick={() => handlers.onRequired(node, !node.required)}
             size="xs"
@@ -589,11 +591,11 @@ const SchemaRow: React.FC<RowProps> = React.memo(
           <BufferedInput
             className={styles.descriptionInput}
             value={description}
-            ariaLabel="Field description"
+            ariaLabel={labels.description}
             placeholder={
               typeof node.value === "boolean"
-                ? "Boolean schema"
-                : "Describe this field"
+                ? labels.boolean
+                : labels.describe
             }
             disabled={!rowEditable || typeof node.value === "boolean"}
             onCommit={(next) => handlers.onDescription(node, next)}
@@ -614,8 +616,8 @@ const SchemaRow: React.FC<RowProps> = React.memo(
               <Popover.Trigger asChild>
                 <Button
                   className={styles.iconButton}
-                  aria-label="Advanced settings"
-                  title="Advanced settings"
+                  aria-label={labels.advanced}
+                  title={labels.advanced}
                   size="xs"
                   variant="ghost"
                 >
@@ -659,8 +661,8 @@ const SchemaRow: React.FC<RowProps> = React.memo(
               <Menu.Trigger asChild>
                 <Button
                   className={styles.iconButton}
-                  aria-label="Add field"
-                  title="Add field"
+                  aria-label={labels.add}
+                  title={labels.add}
                   size="xs"
                   variant="ghost"
                 >
@@ -675,14 +677,14 @@ const SchemaRow: React.FC<RowProps> = React.memo(
                       disabled={node.kind !== "property"}
                       onSelect={() => handlers.onAdd(node, "sibling")}
                     >
-                      Add field below
+                      {labels.addBelow}
                     </Menu.Item>
                     {canAddChild ? (
                       <Menu.Item
                         value="child"
                         onSelect={() => handlers.onAdd(node, "child")}
                       >
-                        Add nested field
+                        {labels.addNested}
                       </Menu.Item>
                     ) : null}
                   </Menu.Content>
@@ -697,9 +699,9 @@ const SchemaRow: React.FC<RowProps> = React.memo(
                 .filter(Boolean)
                 .join(" ")}
               aria-label={
-                armed ? `Confirm delete ${node.key}` : `Delete ${node.key}`
+                treeLabel(armed ? labels.confirmDelete : labels.delete,{name:node.key})
               }
-              title={armed ? "Click again to confirm" : "Delete field"}
+              title={armed ? labels.confirm : labels.deleteField}
               onClick={handleDeleteClick}
               size="xs"
               variant="ghost"
@@ -777,6 +779,7 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
     onError,
     strictExternalSchema = true,
   }) => {
+    const labels = React.useContext(TreeLabelsContext);
     const reportError = React.useCallback(
       (error: SchemaEditorError) => {
         try {
@@ -1327,9 +1330,9 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
         }
       >
         <Box className={styles.toolbar}>
-          <Text className={styles.toolbarTitle}>Schema</Text>
+          <Text className={styles.toolbarTitle}>{labels.title}</Text>
           <Text className={styles.toolbarMeta}>
-            {propertyCount} field{propertyCount === 1 ? "" : "s"}
+            {treeLabel(labels.count,{count:propertyCount})}
           </Text>
           <Box className={styles.toolbarSpacer} />
           <Button
@@ -1339,7 +1342,7 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
             size="xs"
             variant="ghost"
           >
-            {expanded.size > 0 ? "Collapse all" : "Expand all"}
+            {expanded.size > 0 ? labels.collapse : labels.expand}
           </Button>
           <Button
             className={styles.ghostButton}
@@ -1349,36 +1352,36 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
             variant="ghost"
           >
             <MdAdd />
-            Add field
+            {labels.add}
           </Button>
         </Box>
 
         <Box
           className={styles.tableViewport}
           role="table"
-          aria-label="Schema fields"
+          aria-label={labels.title}
         >
           <Box className={styles.header} role="row">
             <Text role="columnheader" className={styles.headerCell}>
-              Name
+              {labels.name}
             </Text>
             <Text role="columnheader" className={styles.headerCell}>
-              Type
+              {labels.type}
             </Text>
             <Text
               role="columnheader"
               className={styles.headerCell}
-              title="Required or optional"
+              title={labels.required}
             >
-              Req
+              {labels.required}
             </Text>
             <Text role="columnheader" className={styles.headerCell}>
-              Description
+              {labels.description}
             </Text>
             <Box
               role="columnheader"
               className={styles.headerCell}
-              aria-label="Actions"
+              aria-label={labels.actions}
             />
           </Box>
 
@@ -1396,9 +1399,9 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
           >
             {nodes.length === 0 ? (
               <Box className={styles.empty}>
-                <Text className={styles.emptyTitle}>No fields yet</Text>
+                <Text className={styles.emptyTitle}>{labels.empty}</Text>
                 <Text className={styles.emptyHint}>
-                  Add the first field to start describing this object.
+                  {labels.emptyHint}
                 </Text>
                 <Button
                   className={styles.ghostButton}
@@ -1407,7 +1410,7 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
                   size="xs"
                 >
                   <MdAdd />
-                  Add field
+                  {labels.add}
                 </Button>
               </Box>
             ) : (
@@ -1438,8 +1441,7 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
         {overflow ? (
           <Box className={styles.notice} role="status">
             <Text className={styles.noticeText}>
-              Showing the first {maxRows} rows. Collapse a branch to see the
-              rest.
+              {treeLabel(labels.overflow,{count:maxRows})}
             </Text>
           </Box>
         ) : null}
@@ -1454,10 +1456,11 @@ const SchemaTreeEditorInner: React.FC<SchemaTreeEditorProps> = React.memo(
 
 export const SchemaTreeEditor = React.memo(
   (props: import("./libs/types").SchemaDesignerTreeProps) => {
+    const labels = React.useMemo(()=>({...defaultTreeLabels,...props.labels}),[props.labels]);
     const value =
       props.value !== undefined ? props.value : (props.schema ?? {});
     return (
-      <SchemaErrorBoundary onError={props.onError}>
+      <TreeLabelsContext.Provider value={labels}><SchemaErrorBoundary onError={props.onError}>
         {typeof value === "boolean" ? (
           <InlineSchemaEditor
             value={value}
@@ -1472,7 +1475,7 @@ export const SchemaTreeEditor = React.memo(
             onChange={props.onChange}
           />
         )}
-      </SchemaErrorBoundary>
+      </SchemaErrorBoundary></TreeLabelsContext.Provider>
     );
   },
 );

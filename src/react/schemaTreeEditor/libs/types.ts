@@ -144,6 +144,7 @@ export interface AdvancedEditorContext {
 }
 
 export interface SchemaTreeEditorProps {
+  labels?: Partial<import("../labels").SchemaTreeLabels>;
   /** Controlled schema. Must be treated as immutable by the host. */
   schema: JSONSchema;
   onChange: (next: JSONSchema) => void;

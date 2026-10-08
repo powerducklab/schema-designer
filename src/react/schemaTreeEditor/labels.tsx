@@ -1,0 +1,42 @@
+import {createContext} from "react";
+export const defaultTreeLabels = {
+  "title": "Schema",
+  "count": "{{count}} fields",
+  "expand": "Expand all",
+  "collapse": "Collapse all",
+  "add": "Add field",
+  "name": "Name",
+  "type": "Type",
+  "required": "Required",
+  "optional": "Optional",
+  "description": "Description",
+  "actions": "Actions",
+  "empty": "No fields yet",
+  "emptyHint": "Add the first field to start describing this object.",
+  "overflow": "Showing the first {{count}} rows. Collapse a branch to see the rest.",
+  "reorder": "Reorder {{name}}",
+  "dragHint": "Drag to reorder, or Ctrl/Cmd with the arrow keys",
+  "collapseField": "Collapse {{name}}",
+  "expandField": "Expand {{name}}",
+  "fieldName": "Field name",
+  "invalidName": "Name is invalid or already used",
+  "reference": "Reference: {{name}}",
+  "recursive": "Recursive reference, expansion stopped",
+  "any": "Any value",
+  "never": "Never",
+  "selectType": "Select a schema type",
+  "makeOptional": "Required, click to make optional",
+  "makeRequired": "Optional, click to make required",
+  "describe": "Describe this field",
+  "boolean": "Boolean schema",
+  "advanced": "Advanced settings",
+  "addBelow": "Add field below",
+  "addNested": "Add nested field",
+  "confirmDelete": "Confirm delete {{name}}",
+  "delete": "Delete {{name}}",
+  "confirm": "Click again to confirm",
+  "deleteField": "Delete field"
+};
+export type SchemaTreeLabels = typeof defaultTreeLabels;
+export const TreeLabelsContext = createContext(defaultTreeLabels);
+export const treeLabel = (template:string,values:Record<string,string|number>) => template.replace(/\{\{(\w+)\}\}/g,(match,key)=>values[key]===undefined?match:String(values[key]));

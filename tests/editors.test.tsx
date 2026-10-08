@@ -811,3 +811,30 @@ it("removes selection when external parameters replace the selected field", () =
   view.rerender(table("replacement"));
   expect(screen.queryByRole("toolbar", {name: "Selected parameter actions"})).toBeNull();
 });
+
+describe('contract parameter row identity',()=>{
+  it.each(['', 'same'])('edits only one row with name %j and persists its example through rename',async(name)=>{
+    const {EditorView}=await import('@codemirror/view');
+    const save=vi.fn();
+    function Host(){
+      const [parameters,setParameters]=useState<any[]>([
+        {name,in:'cookie',schema:{type:'string'}},
+        {name,in:'cookie',schema:{type:'string'}}
+      ]);
+      return <ParameterTable mode="design" parameters={parameters} onChange={next=>{save(next);setParameters(next);}}/>;
+    }
+    render(provider(<Host/>));
+    const cells=screen.getAllByRole('textbox',{name:`Value for ${name}`.trim()});
+    const view=EditorView.findFromDOM(cells[1]);
+    expect(view).toBeTruthy();
+    act(()=>view!.dispatch({changes:{from:0,to:view!.state.doc.length,insert:'second row only'}}));
+    await waitFor(()=>expect(save).toHaveBeenCalled());
+    expect(save.mock.lastCall?.[0][0].example).toBeUndefined();
+    expect(save.mock.lastCall?.[0][1].example).toBe('second row only');
+    expect(cells[0].textContent).not.toContain('second row only');
+    const names=screen.getAllByRole('textbox',{name:`Name for ${name}`.trim()});
+    const nameView=EditorView.findFromDOM(names[1]);
+    act(()=>nameView!.dispatch({changes:{from:0,to:nameView!.state.doc.length,insert:'renamed'}}));
+    expect(save.mock.lastCall?.[0][1]).toMatchObject({name:'renamed',example:'second row only'});
+  });
+});
