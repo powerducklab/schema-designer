@@ -838,3 +838,21 @@ describe('contract parameter row identity',()=>{
     expect(save.mock.lastCall?.[0][1]).toMatchObject({name:'renamed',example:'second row only'});
   });
 });
+
+it('request typing preserves peer editors and never mutates the parameter schema',async()=>{
+ const {EditorView}=await import('@codemirror/view');
+ const schemaChange=vi.fn(), valuesChange=vi.fn();
+ const parameters=Array.from({length:10},(_,i)=>({name:'p'+i,in:'query' as const,schema:{type:'string' as const}}));
+ function Host(){
+  const [values,setValues]=useState({});
+  return <ParameterTable parameters={parameters} mode="request" values={values} onChange={schemaChange} onValuesChange={next=>{valuesChange(next);setValues(next);}}/>;
+ }
+ render(provider(<Host/>));
+ const inputs=screen.getAllByRole('textbox');
+ const views=inputs.map(input=>EditorView.findFromDOM(input));
+ const editor=EditorView.findFromDOM(screen.getByRole('textbox',{name:'Value for p0'}))!;
+ for(let i=0;i<20;i++)act(()=>editor.dispatch({changes:{from:editor.state.doc.length,insert:'x'}}));
+ expect(schemaChange).not.toHaveBeenCalled();
+ expect(valuesChange.mock.lastCall?.[0]['["query","p0"]'].value).toBe('x'.repeat(20));
+ expect(screen.getAllByRole('textbox').map(input=>EditorView.findFromDOM(input))).toEqual(views);
+});

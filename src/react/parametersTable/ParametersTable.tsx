@@ -185,6 +185,12 @@ export const ParameterTable = memo(function ParameterTable(
     null,
   );
 
+  // Unchanged rows keep resolved references/examples across value keystrokes.
+  const derivedRows = useMemo(() => new WeakMap<ParameterRow, {
+    displayValue: ReturnType<typeof getDisplayValue>;
+    type: ReturnType<typeof resolveParameterType>;
+  }>(), [props.document, props.mode, props.values !== undefined]);
+
   const visibleColumns = useMemo(
     () =>
       getVisibleColumns({
@@ -863,7 +869,7 @@ export const ParameterTable = memo(function ParameterTable(
 
       commitRows(nextRows);
     },
-    [commitRows, rows],
+    [commitRows],
   );
 
   const handleDeleteSelected = useCallback(() => {
@@ -1103,15 +1109,17 @@ export const ParameterTable = memo(function ParameterTable(
                     {rows.map((row, index) => {
                       const parameter = row.parameter;
 
-                      const displayValue =
-                        props.mode === "design" || props.values !== undefined
-                          ? resolveParameterValue(parameter, props.document)
-                          : getDisplayValue(row, props.document);
-
-                      const type = resolveParameterType(
-                        parameter,
-                        props.document,
-                      );
+                      let derived = derivedRows.get(row);
+                      if (!derived) {
+                        derived = {
+                          displayValue: props.mode === "design" || props.values !== undefined
+                            ? resolveParameterValue(parameter, props.document)
+                            : getDisplayValue(row, props.document),
+                          type: resolveParameterType(parameter, props.document),
+                        };
+                        derivedRows.set(row, derived);
+                      }
+                      const {displayValue, type} = derived;
 
                       const selected = selectedIds.has(row.id);
 

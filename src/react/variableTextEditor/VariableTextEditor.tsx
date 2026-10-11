@@ -387,7 +387,7 @@ function getOverlayLayer(): HTMLDivElement | null {
   return sharedOverlayLayer;
 }
 
-export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
+const MemoVariableTextEditor: React.FC<VariableTextEditorProps> = memo(
   (props) => {
     const {
       value,
@@ -2558,3 +2558,18 @@ export const VariableTextEditor: React.FC<VariableTextEditorProps> = memo(
 );
 
 VariableTextEditor.displayName = "VariableTextEditor";
+
+/** Keep callback identity changes out of the expensive editor render path.
+ * Callbacks always dispatch to the latest committed props.
+ */
+export function VariableTextEditor(props: VariableTextEditorProps) {
+  const callbacks = useRef(props);
+  useLayoutEffect(() => { callbacks.current = props; });
+  const handlers = useMemo(() => ({
+    onChange: (value: string) => callbacks.current.onChange?.(value),
+    onSubmit: (value: string) => callbacks.current.onSubmit?.(value),
+    onFocus: () => callbacks.current.onFocus?.(),
+    onBlur: () => callbacks.current.onBlur?.(),
+  }), []);
+  return <MemoVariableTextEditor {...props} {...handlers} />;
+}
