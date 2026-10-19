@@ -66,7 +66,10 @@ export function ParameterSettings({
           aria-label={configureLabel}
           title={configureLabel}
         >
-          <VscSettingsCompact size={16} />
+          <VscSettingsCompact
+            size={14}
+            className={tableStyles.settingsIcon}
+          />
         </Button>
       </Popover.Trigger>
       <Portal>

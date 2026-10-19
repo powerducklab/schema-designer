@@ -556,11 +556,53 @@
   box-shadow: none;
 }
 .includeSwitch :global([data-part="control"][data-focus-visible]) { outline: 2px solid var(--color-border-focus, #66758a); outline-offset: 2px; }
-.settingsTrigger { opacity: 0; pointer-events: none; }
+/* Per-row configuration trigger. It only reveals on row hover/focus, so it is
+   deliberately de-emphasized and must not compete with the enable switch. The
+   hit area stays 24x24 even though the glyph is smaller. */
+.settingsTrigger {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: var(--radius-md, 6px);
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    background var(--transition-fast, 140ms ease),
+    color var(--transition-fast, 140ms ease),
+    opacity var(--transition-fast, 140ms ease);
+}
+.settingsTrigger:hover,
+.settingsTrigger[aria-expanded="true"] {
+  background: var(--color-surface-hover, #f4f5f6);
+}
+.settingsIcon {
+  color: var(--color-text-tertiary, #989da5);
+  transition: color var(--transition-fast, 140ms ease);
+}
+.settingsTrigger:hover .settingsIcon {
+  color: var(--color-text-secondary, #6f747c);
+}
+.settingsTrigger[aria-expanded="true"] .settingsIcon {
+  color: var(--color-text-accent, #d97818);
+}
 .row:hover .settingsTrigger,
 .row:focus-within .settingsTrigger,
-.settingsTrigger[aria-expanded="true"] { opacity: 1; pointer-events: auto; }
-@media (hover: none) { .settingsTrigger { opacity: 1; pointer-events: auto; } }
+.settingsTrigger[aria-expanded="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .settingsTrigger {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
 
 .actionBarLeft {
   display: flex;
